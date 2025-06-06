@@ -38,154 +38,48 @@ class Game(object):
         pass
         
     def init_data(self):
-        # Face avant (z = 1), couleur rouge :
-        p0 = (0, 0, 0) # Coin inférieur gauche
-        p1 = (1, 0, 0) # Coin inférieur droit
-        p2 = (1, 1, 0) # Coin supérieur droit
-        p3 = (0, 1, 0) # Coin supérieur gauche
+        # On place ici tous les sommets en une seule liste
+        positions = [
+            # Face avant
+            (0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1),
+            # Face arrière
+            (1, 0, 0), (0, 0, 0), (0, 1, 0), (1, 1, 0),
+            # Face droite
+            (1, 0, 1), (1, 0, 0), (1, 1, 0), (1, 1, 1),
+            # Face gauche
+            (0, 0, 0), (0, 0, 1), (0, 1, 1), (0, 1, 0),
+            # Face supérieure
+            (0, 1, 1), (1, 1, 1), (1, 1, 0), (0, 1, 0),
+            # Face inférieure
+            (0, 0, 0), (1, 0, 0), (1, 0, 1), (0, 0, 1),
+        ]
 
-        n0 = (0, 0, 1) # Normale pour le plan sur l'axe Z
-        n1 = (0, 0, 1) # Normale pour le plan sur l'axe Z
-        n2 = (0, 0, 1) # Normale pour le plan sur l'axe Z
-        n3 = (0, 0, 1) # Normale pour le plan sur l'axe Z
+        normales = [
+            (0, 0, 1)] * 4 + [(0, 0, -1)] * 4 + [(1, 0, 0)] * 4 + \
+            [(-1, 0, 0)] * 4 + [(0, 1, 0)] * 4 + [(0, -1, 0)] * 4
 
-        c0 = (1, 0, 0) # Rouge
-        c1 = (0, 1, 0) # Vert
-        c2 = (0, 0, 1) # Bleu
-        c3 = (1, 1, 0) # Jaune
+        couleurs = [
+            (1, 0, 0)] * 4 + [(0, 1, 0)] * 4 + [(0, 0, 1)] * 4 + \
+            [(1, 1, 0)] * 4 + [(0, 1, 1)] * 4 + [(1, 0, 1)] * 4
 
-        uv0 = (0, 0) # Coordonnées de texture pour le coin inférieur gauche
-        uv1 = (1, 0) # Coordonnées de texture pour le coin inférieur droit
-        uv2 = (1, 1) # Coordonnées de texture pour le coin supérieur droit
-        uv3 = (0, 1) # Coordonnées de texture pour le coin supérieur gauche
+        uvs = [(0, 0), (1, 0), (1, 1), (0, 1)] * 6
 
-        sommets = np.concatenate((p0, n0, c0, uv0, p1, n1, c1, uv1, p2, n2, c2, uv2, p3, n3, c3, uv3))
-        
-        # Face arrière (z = 0), couleur vert :
-        p4 = (1, 0, 0)
-        p5 = (0, 0, 0)
-        p6 = (0, 1, 0)
-        p7 = (1, 1, 0)
+        # Fusion de tous les attributs pour chaque sommet
+        vertices_cube = np.array([
+            positions[i] + normales[i] + couleurs[i] + uvs[i]
+            for i in range(24)
+        ], dtype=np.float32)
 
-        n4 = (0, 0, -1)
-        n5 = (0, 0, -1)
-        n6 = (0, 0, -1)
-        n7 = (0, 0, -1)
+        # Indexation des triangles : 2 triangles par face
+        indices_cube = np.array([
+            0, 1, 2, 0, 2, 3,        # Face avant
+            4, 5, 6, 4, 6, 7,        # Face arrière
+            8, 9,10, 8,10,11,        # Face droite
+        12,13,14,12,14,15,        # Face gauche
+        16,17,18,16,18,19,        # Face supérieure
+        20,21,22,20,22,23         # Face inférieure
+        ], dtype=np.uint32)
 
-        c4 = (0, 1, 0) # Vert
-        c5 = (0, 1, 0)
-        c6 = (0, 1, 0)
-        c7 = (0, 1, 0)
-
-        uv4 = (0, 0)
-        uv5 = (1, 0)
-        uv6 = (1, 1)
-        uv7 = (0, 1)
-
-
-        # Face droite (x = 1), couleur bleu :
-        p8 = (1, 0, 1)
-        p9 = (1, 0, 0)
-        p10 = (1, 1, 0)
-        p11 = (1, 1, 1)
-
-        n8 = (1, 0, 0)
-        n9 = (1, 0, 0)
-        n10 = (1, 0, 0)
-        n11 = (1, 0, 0)
-
-        c8 = (0, 0, 1) # Bleu
-        c9 = (0, 0, 1)
-        c10 = (0, 0, 1)
-        c11 = (0, 0, 1)
-
-        uv8 = (0, 0)
-        uv9 = (1, 0)
-        uv10 = (1, 1)
-        uv11 = (0, 1)
-
-
-        #Face gauche (x = 0), couleur jaune :
-        p12 = (0, 0, 0)
-        p13 = (0, 0, 1)
-        p14 = (0, 1, 1)
-        p15 = (0, 1, 0)
-
-        n12 = (-1, 0, 0)
-        n13 = (-1, 0, 0)
-        n14 = (-1, 0, 0)
-        n15 = (-1, 0, 0)
-
-        c12 = (1, 1, 0) # Jaune
-        c13 = (1, 1, 0)
-        c14 = (1, 1, 0)
-        c15 = (1, 1, 0)
-
-        uv12 = (0, 0)
-        uv13 = (1, 0)
-        uv14 = (1, 1)
-        uv15 = (0, 1)
-
-        #Face supérieure (y = 1), couleur cyan :
-        p16 = (0, 1, 1)
-        p17 = (1, 1, 1)
-        p18 = (1, 1, 0)
-        p19 = (0, 1, 0)
-
-        n16 = (0, 1, 0)
-        n17 = (0, 1, 0)
-        n18 = (0, 1, 0)
-        n19 = (0, 1, 0)
-        
-        c16 = (0, 1, 1) # Cyan
-        c17 = (0, 1, 1)
-        c18 = (0, 1, 1)
-        c19 = (0, 1, 1)
-
-        uv16 = (0, 0)
-        uv17 = (1, 0)
-        uv18 = (1, 1)
-        uv19 = (0, 1)
-
-        #Face inférieure (y = 0), couleur magenta :
-        p20 = (0, 0, 0)
-        p21 = (1, 0, 0)
-        p22 = (1, 0, 1)
-        p23 = (0, 0, 1)
-
-        n20 = (0, -1, 0)
-        n21 = (0, -1, 0)
-        n22 = (0, -1, 0)
-        n23 = (0, -1, 0)
-
-        c20 = (1, 0, 1) # Magenta
-        c21 = (1, 0, 1)
-        c22 = (1, 0, 1)
-        c23 = (1, 0, 1)
-
-        uv20 = (0, 0)
-        uv21 = (1, 0)
-        uv22 = (1, 1)
-        uv23 = (0, 1)
-
-        # Face avant
-        f0 = (0, 1, 2)
-        f1 = (0, 2, 3)
-        # Face arrière
-        f2 = (4, 5, 6)
-        f3 = (4, 6, 7)
-        # Face droite
-        f4 = (8, 9, 10)
-        f5 = (8, 10, 11)
-        # Face gauche
-        f6 = (12, 13, 14)
-        f7 = (12, 14, 15)
-        # Face supérieure
-        f8 = (16, 17, 18)
-        f9 = (16, 18, 19)
-        # Face inférieure
-        f10 = (20, 21, 22)
-        f11 = (20, 22, 23)
 
 
     def run(self):
