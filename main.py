@@ -2,11 +2,16 @@
 import OpenGL.GL as GL
 import glfw
 import numpy as np
+<<<<<<< HEAD
 import time
 import os 
 import pyrr
 from PIL import Image
 import ctypes
+=======
+import os
+
+>>>>>>> e34d8df9ca5f4f87f6316c43caba7cd2ef035bc9
 class Game(object):
     """ fenêtre GLFW avec openGL """
 
@@ -16,6 +21,7 @@ class Game(object):
         self.init_programs()
         self.init_data()
 
+<<<<<<< HEAD
         #faie bouger le cube
         self.translation_matrix = pyrr.matrix44.create_identity(dtype=np.float32)
         self.rotation_matrix = pyrr.matrix44.create_identity(dtype=np.float32)
@@ -29,6 +35,8 @@ class Game(object):
         self.rotation_velocity = np.array([0.0, 0.0], dtype=np.float32)  # [x, y]
 
 
+=======
+>>>>>>> e34d8df9ca5f4f87f6316c43caba7cd2ef035bc9
     def init_window(self):
         # initialisation de la librairie glfw et du context opengl associé
         glfw.init()
@@ -51,8 +59,9 @@ class Game(object):
         GL.glEnable(GL.GL_DEPTH_TEST)
 
     def init_programs(self):
-        pass
-        
+        self.program = self.create_program_from_file('phong.vert', 'phong.frag')
+        GL.glUseProgram(self.program)
+
     def init_data(self):
         # On place ici tous les sommets en une seule liste
         positions = [
@@ -91,11 +100,12 @@ class Game(object):
             0, 1, 2, 0, 2, 3,        # Face avant
             4, 5, 6, 4, 6, 7,        # Face arrière
             8, 9,10, 8,10,11,        # Face droite
-        12,13,14,12,14,15,        # Face gauche
-        16,17,18,16,18,19,        # Face supérieure
-        20,21,22,20,22,23         # Face inférieure
+            12,13,14,12,14,15,        # Face gauche
+            16,17,18,16,18,19,        # Face supérieure
+            20,21,22,20,22,23         # Face inférieure
         ], dtype=np.uint32)
 
+<<<<<<< HEAD
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
 
@@ -125,6 +135,46 @@ class Game(object):
         GL.glEnableVertexAttribArray(3)
         GL.glVertexAttribPointer(3, 2, GL.GL_FLOAT, GL.GL_FALSE, stride, ctypes.c_void_p(9 * 4))
 
+=======
+    def generate_sphere(radius=1.0, lat_segments=16, lon_segments=32):
+        vertices = []
+        indices = []
+        for i in range(lat_segments + 1):
+            theta = np.pi * i / lat_segments
+            sin_theta = np.sin(theta)
+            cos_theta = np.cos(theta)
+            for j in range(lon_segments + 1):
+                phi = 2 * np.pi * j / lon_segments
+                sin_phi = np.sin(phi)
+                cos_phi = np.cos(phi)
+                # Position (x, y, z)
+                x = radius * sin_theta * cos_phi
+                y = radius * cos_theta
+                z = radius * sin_theta * sin_phi
+                # Normale (norm´ee car sph`ere unitaire)
+                nx = sin_theta * cos_phi
+                ny = cos_theta
+                nz = sin_theta * sin_phi
+                # Texture coordinates (u, v)
+                u = j / lon_segments
+                v = i / lat_segments
+                r, g, b = 1.0, 1.0, 1.0
+                # Interlaced vertex: position, normal, color, uv
+                vertex = [x, y, z, nx, ny, nz, r, g, b, u, v]
+                vertices.append(vertex)
+        # Faces
+        for i in range(lat_segments):
+            for j in range(lon_segments):
+                a = i * (lon_segments + 1) + j
+                b = a + lon_segments + 1
+                indices.append((a, b, a + 1))
+                indices.append((a + 1, b, b + 1))
+        return {
+        'interlaced': np.array(vertices, dtype=np.float32), # [pos, norm, color]
+        'faces': np.array(indices, dtype=np.int32) # (i0, i1, i2)
+        }
+        
+>>>>>>> e34d8df9ca5f4f87f6316c43caba7cd2ef035bc9
 
     def run(self):
 
@@ -201,6 +251,7 @@ class Game(object):
             elif key == glfw.KEY_RIGHT:
                 self.rotation_velocity[1] = -1.0
 
+<<<<<<< HEAD
         elif action == glfw.RELEASE:
             if key in (glfw.KEY_W, glfw.KEY_S):
                 self.translation_velocity[2] = 0.0
@@ -210,6 +261,45 @@ class Game(object):
                 self.rotation_velocity[0] = 0.0
             elif key in (glfw.KEY_LEFT, glfw.KEY_RIGHT):
                 self.rotation_velocity[1] = 0.0
+=======
+    def compile_shader(self, shader_content, shader_type):
+        # compilation d'un shader donne selon son type ´
+        shader_id = GL.glCreateShader(shader_type)
+        GL.glShaderSource(shader_id, shader_content)
+        GL.glCompileShader(shader_id)
+        success = GL.glGetShaderiv(shader_id, GL.GL_COMPILE_STATUS)
+        if not success:
+            log = GL.glGetShaderInfoLog(shader_id).decode('ascii')
+            print(f'{25*"-"}\nError compiling shader: \n\
+                {shader_content}\n{5*"-"}\n{log}\n{25*"-"}')
+        return shader_id
+        
+    def create_program(self, vertex_source, fragment_source):
+        # creation d'un programme GPU ´
+        vs_id = self.compile_shader(vertex_source, GL.GL_VERTEX_SHADER)
+        fs_id = self.compile_shader(fragment_source, GL.GL_FRAGMENT_SHADER)
+        if vs_id and fs_id:
+            program_id = GL.glCreateProgram()
+            GL.glAttachShader(program_id, vs_id)
+            GL.glAttachShader(program_id, fs_id)
+            GL.glLinkProgram(program_id)
+            success = GL.glGetProgramiv(program_id, GL.GL_LINK_STATUS)
+            if not success:
+                log = GL.glGetProgramInfoLog(program_id).decode('ascii')
+                print(f'{25*"-"}\nError linking program:\n{log}\n{25*"-"}')
+            GL.glDeleteShader(vs_id)
+            GL.glDeleteShader(fs_id)
+        return program_id
+
+    def create_program_from_file(self, vs_file, fs_file):
+        # creation d'un programme GPU à partir de fichiers
+        vs_content = open(vs_file, 'r').read() if os.path.exists(vs_file)\
+            else print(f'{25*"-"}\nError reading file:\n{vs_file}\n{25*"-"}')
+        fs_content = open(fs_file, 'r').read() if os.path.exists(fs_file)\
+            else print(f'{25*"-"}\nError reading file:\n{fs_file}\n{25*"-"}')
+        return self.create_program(vs_content, fs_content)
+
+>>>>>>> e34d8df9ca5f4f87f6316c43caba7cd2ef035bc9
 def main():
     g = Game()
     g.run()
