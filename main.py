@@ -2,6 +2,7 @@
 import OpenGL.GL as GL
 import glfw
 import numpy as np
+import os
 
 class Game(object):
     """ fenêtre GLFW avec openGL """
@@ -11,7 +12,6 @@ class Game(object):
         self.init_context()
         self.init_programs()
         self.init_data()
-
 
     def init_window(self):
         # initialisation de la librairie glfw et du context opengl associé
@@ -35,8 +35,9 @@ class Game(object):
         GL.glEnable(GL.GL_DEPTH_TEST)
 
     def init_programs(self):
-        pass
-        
+        self.program = self.create_program_from_file('phong.vert', 'phong.frag')
+        GL.glUseProgram(self.program)
+
     def init_data(self):
         # On place ici tous les sommets en une seule liste
         positions = [
@@ -81,7 +82,6 @@ class Game(object):
         ], dtype=np.uint32)
 
 
-
     def run(self):
         # boucle d'affichage
         while not glfw.window_should_close(self.window):
@@ -98,6 +98,43 @@ class Game(object):
         # sortie du programme si appui sur la touche 'echap'
         if key == glfw.KEY_ESCAPE and action == glfw.PRESS:
             glfw.set_window_should_close(win, glfw.TRUE)
+
+    def compile_shader(self, shader_content, shader_type):
+        # compilation d'un shader donne selon son type ´
+        shader_id = GL.glCreateShader(shader_type)
+        GL.glShaderSource(shader_id, shader_content)
+        GL.glCompileShader(shader_id)
+        success = GL.glGetShaderiv(shader_id, GL.GL_COMPILE_STATUS)
+        if not success:
+            log = GL.glGetShaderInfoLog(shader_id).decode('ascii')
+            print(f'{25*"-"}\nError compiling shader: \n\
+                {shader_content}\n{5*"-"}\n{log}\n{25*"-"}')
+        return shader_id
+        
+    def create_program(self, vertex_source, fragment_source):
+        # creation d'un programme GPU ´
+        vs_id = self.compile_shader(vertex_source, GL.GL_VERTEX_SHADER)
+        fs_id = self.compile_shader(fragment_source, GL.GL_FRAGMENT_SHADER)
+        if vs_id and fs_id:
+            program_id = GL.glCreateProgram()
+            GL.glAttachShader(program_id, vs_id)
+            GL.glAttachShader(program_id, fs_id)
+            GL.glLinkProgram(program_id)
+            success = GL.glGetProgramiv(program_id, GL.GL_LINK_STATUS)
+            if not success:
+                log = GL.glGetProgramInfoLog(program_id).decode('ascii')
+                print(f'{25*"-"}\nError linking program:\n{log}\n{25*"-"}')
+            GL.glDeleteShader(vs_id)
+            GL.glDeleteShader(fs_id)
+        return program_id
+
+    def create_program_from_file(self, vs_file, fs_file):
+        # creation d'un programme GPU à partir de fichiers
+        vs_content = open(vs_file, 'r').read() if os.path.exists(vs_file)\
+            else print(f'{25*"-"}\nError reading file:\n{vs_file}\n{25*"-"}')
+        fs_content = open(fs_file, 'r').read() if os.path.exists(fs_file)\
+            else print(f'{25*"-"}\nError reading file:\n{fs_file}\n{25*"-"}')
+        return self.create_program(vs_content, fs_content)
 
 def main():
     g = Game()
