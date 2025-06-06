@@ -101,7 +101,7 @@ class Game(object):
 
         self.vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.vertex_data.nbytes, self.vertex_data, GL.GL_STATIC_DRAW)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.vertices_cube.nbytes, self.vertices_cube, GL.GL_STATIC_DRAW)
 
         self.ebo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ebo)
@@ -288,7 +288,7 @@ class Game(object):
         return self.create_program(vs_content, fs_content)
 
 
-        
+
 def main():
     g = Game()
     g.run()
