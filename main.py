@@ -2,16 +2,11 @@
 import OpenGL.GL as GL
 import glfw
 import numpy as np
-<<<<<<< HEAD
 import time
 import os 
 import pyrr
 from PIL import Image
 import ctypes
-=======
-import os
-
->>>>>>> e34d8df9ca5f4f87f6316c43caba7cd2ef035bc9
 class Game(object):
     """ fenêtre GLFW avec openGL """
 
@@ -21,7 +16,6 @@ class Game(object):
         self.init_programs()
         self.init_data()
 
-<<<<<<< HEAD
         #faie bouger le cube
         self.translation_matrix = pyrr.matrix44.create_identity(dtype=np.float32)
         self.rotation_matrix = pyrr.matrix44.create_identity(dtype=np.float32)
@@ -35,8 +29,6 @@ class Game(object):
         self.rotation_velocity = np.array([0.0, 0.0], dtype=np.float32)  # [x, y]
 
 
-=======
->>>>>>> e34d8df9ca5f4f87f6316c43caba7cd2ef035bc9
     def init_window(self):
         # initialisation de la librairie glfw et du context opengl associé
         glfw.init()
@@ -104,8 +96,6 @@ class Game(object):
             16,17,18,16,18,19,        # Face supérieure
             20,21,22,20,22,23         # Face inférieure
         ], dtype=np.uint32)
-
-<<<<<<< HEAD
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
 
@@ -135,7 +125,7 @@ class Game(object):
         GL.glEnableVertexAttribArray(3)
         GL.glVertexAttribPointer(3, 2, GL.GL_FLOAT, GL.GL_FALSE, stride, ctypes.c_void_p(9 * 4))
 
-=======
+
     def generate_sphere(radius=1.0, lat_segments=16, lon_segments=32):
         vertices = []
         indices = []
@@ -173,8 +163,7 @@ class Game(object):
         'interlaced': np.array(vertices, dtype=np.float32), # [pos, norm, color]
         'faces': np.array(indices, dtype=np.int32) # (i0, i1, i2)
         }
-        
->>>>>>> e34d8df9ca5f4f87f6316c43caba7cd2ef035bc9
+
 
     def run(self):
 
@@ -233,7 +222,7 @@ class Game(object):
         # sortie du programme si appui sur la touche 'echap'
         if action == glfw.PRESS:
             if key == glfw.KEY_ESCAPE:
-                glfw.set_window_should_close(window, True)
+                glfw.set_window_should_close(win, True)
             elif key == glfw.KEY_W:
                 self.translation_velocity[2] = -1.0
             elif key == glfw.KEY_S:
@@ -251,7 +240,6 @@ class Game(object):
             elif key == glfw.KEY_RIGHT:
                 self.rotation_velocity[1] = -1.0
 
-<<<<<<< HEAD
         elif action == glfw.RELEASE:
             if key in (glfw.KEY_W, glfw.KEY_S):
                 self.translation_velocity[2] = 0.0
@@ -261,7 +249,7 @@ class Game(object):
                 self.rotation_velocity[0] = 0.0
             elif key in (glfw.KEY_LEFT, glfw.KEY_RIGHT):
                 self.rotation_velocity[1] = 0.0
-=======
+
     def compile_shader(self, shader_content, shader_type):
         # compilation d'un shader donne selon son type ´
         shader_id = GL.glCreateShader(shader_type)
@@ -299,7 +287,8 @@ class Game(object):
             else print(f'{25*"-"}\nError reading file:\n{fs_file}\n{25*"-"}')
         return self.create_program(vs_content, fs_content)
 
->>>>>>> e34d8df9ca5f4f87f6316c43caba7cd2ef035bc9
+
+        
 def main():
     g = Game()
     g.run()
