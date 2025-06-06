@@ -1,11 +1,8 @@
 #version 330 core
 
-// Variable de sortie (sera utilisé comme couleur)
-out vec4 color;
+in vec3 frag_color;
+out vec4 out_color;
 
-//Un Fragment Shader minimaliste
-void main (void)
-{
-  //Couleur du fragment
-  color = vec4(1.0,0.0,0.0,1.0);
+void main() {
+    out_color = vec4(frag_color, 1.0);
 }
