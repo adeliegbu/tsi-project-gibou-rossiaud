@@ -60,8 +60,48 @@ class Game(object):
         uv3 = (0, 1) # Coordonn´ees de texture pour le coin sup´erieur gauche
 
         sommets = np.concatenate((p0, n0, c0, uv0, p1, n1, c1, uv1, p2, n2, c2, uv2, p3, n3, c3, uv3))
-        
 
+        #Face gauche (x = 0), couleur jaune :
+        p12 = (0, 0, 0)
+        p13 = (0, 0, 1)
+        p14 = (0, 1, 1)
+        p15 = (0, 1, 0)
+
+        n12 = (-1, 0, 0)
+        n13 = (-1, 0, 0)
+        n14 = (-1, 0, 0)
+        n15 = (-1, 0, 0)
+
+        c12 = (1, 1, 0) # Jaune
+        c13 = (1, 1, 0)
+        c14 = (1, 1, 0)
+        c15 = (1, 1, 0)
+
+        uv12 = (0, 0)
+        uv13 = (1, 0)
+        uv14 = (1, 1)
+        uv15 = (0, 1)
+
+        #Face supérieure (y = 1), couleur cyan :
+        p16 = (0, 1, 1)
+        p17 = (1, 1, 1)
+        p18 = (1, 1, 0)
+        p19 = (0, 1, 0)
+
+        n16 = (0, 1, 0)
+        n17 = (0, 1, 0)
+        n18 = (0, 1, 0)
+        n19 = (0, 1, 0)
+        
+        c16 = (0, 1, 1) # Cyan
+        c17 = (0, 1, 1)
+        c18 = (0, 1, 1)
+        c19 = (0, 1, 1)
+
+        uv16 = (0, 0)
+        uv17 = (1, 0)
+        uv18 = (1, 1)
+        uv19 = (0, 1)
 
     def run(self):
         # boucle d'affichage
