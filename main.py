@@ -147,6 +147,47 @@ class Game(object):
         uv18 = (1, 1)
         uv19 = (0, 1)
 
+        #Face inférieure (y = 0), couleur magenta :
+        p20 = (0, 0, 0)
+        p21 = (1, 0, 0)
+        p22 = (1, 0, 1)
+        p23 = (0, 0, 1)
+
+        n20 = (0, -1, 0)
+        n21 = (0, -1, 0)
+        n22 = (0, -1, 0)
+        n23 = (0, -1, 0)
+
+        c20 = (1, 0, 1) # Magenta
+        c21 = (1, 0, 1)
+        c22 = (1, 0, 1)
+        c23 = (1, 0, 1)
+
+        uv20 = (0, 0)
+        uv21 = (1, 0)
+        uv22 = (1, 1)
+        uv23 = (0, 1)
+
+        # Face avant
+        f0 = (0, 1, 2)
+        f1 = (0, 2, 3)
+        # Face arrière
+        f2 = (4, 5, 6)
+        f3 = (4, 6, 7)
+        # Face droite
+        f4 = (8, 9, 10)
+        f5 = (8, 10, 11)
+        # Face gauche
+        f6 = (12, 13, 14)
+        f7 = (12, 14, 15)
+        # Face supérieure
+        f8 = (16, 17, 18)
+        f9 = (16, 18, 19)
+        # Face inférieure
+        f10 = (20, 21, 22)
+        f11 = (20, 22, 23)
+
+
     def run(self):
         # boucle d'affichage
         while not glfw.window_should_close(self.window):
