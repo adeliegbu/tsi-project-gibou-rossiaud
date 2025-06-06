@@ -39,7 +39,29 @@ class Game(object):
         pass
         
     def init_data(self):
-        pass
+        p0 = (0, 0, 0) # Coin inf´erieur gauche
+        p1 = (1, 0, 0) # Coin inf´erieur droit
+        p2 = (1, 1, 0) # Coin sup´erieur droit
+        p3 = (0, 1, 0) # Coin sup´erieur gauche
+
+        n0 = (0, 0, 1) # Normale pour le plan sur l'axe Z
+        n1 = (0, 0, 1) # Normale pour le plan sur l'axe Z
+        n2 = (0, 0, 1) # Normale pour le plan sur l'axe Z
+        n3 = (0, 0, 1) # Normale pour le plan sur l'axe Z
+
+        c0 = (1, 0, 0) # Rouge
+        c1 = (0, 1, 0) # Vert
+        c2 = (0, 0, 1) # Bleu
+        c3 = (1, 1, 0) # Jaune
+
+        uv0 = (0, 0) # Coordonn´ees de texture pour le coin inf´erieur gauche
+        uv1 = (1, 0) # Coordonn´ees de texture pour le coin inf´erieur droit
+        uv2 = (1, 1) # Coordonn´ees de texture pour le coin sup´erieur droit
+        uv3 = (0, 1) # Coordonn´ees de texture pour le coin sup´erieur gauche
+
+        sommets = np.concatenate((p0, n0, c0, uv0, p1, n1, c1, uv1, p2, n2, c2, uv2, p3, n3, c3, uv3))
+        
+
 
     def run(self):
         # boucle d'affichage
