@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import OpenGL.GL as GL
 import glfw
 import numpy as np
@@ -39,10 +38,11 @@ class Game(object):
         pass
         
     def init_data(self):
-        p0 = (0, 0, 0) # Coin inf´erieur gauche
-        p1 = (1, 0, 0) # Coin inf´erieur droit
-        p2 = (1, 1, 0) # Coin sup´erieur droit
-        p3 = (0, 1, 0) # Coin sup´erieur gauche
+        # Face avant (z = 1), couleur rouge :
+        p0 = (0, 0, 0) # Coin inférieur gauche
+        p1 = (1, 0, 0) # Coin inférieur droit
+        p2 = (1, 1, 0) # Coin supérieur droit
+        p3 = (0, 1, 0) # Coin supérieur gauche
 
         n0 = (0, 0, 1) # Normale pour le plan sur l'axe Z
         n1 = (0, 0, 1) # Normale pour le plan sur l'axe Z
@@ -54,13 +54,56 @@ class Game(object):
         c2 = (0, 0, 1) # Bleu
         c3 = (1, 1, 0) # Jaune
 
-        uv0 = (0, 0) # Coordonn´ees de texture pour le coin inf´erieur gauche
-        uv1 = (1, 0) # Coordonn´ees de texture pour le coin inf´erieur droit
-        uv2 = (1, 1) # Coordonn´ees de texture pour le coin sup´erieur droit
-        uv3 = (0, 1) # Coordonn´ees de texture pour le coin sup´erieur gauche
+        uv0 = (0, 0) # Coordonnées de texture pour le coin inférieur gauche
+        uv1 = (1, 0) # Coordonnées de texture pour le coin inférieur droit
+        uv2 = (1, 1) # Coordonnées de texture pour le coin supérieur droit
+        uv3 = (0, 1) # Coordonnées de texture pour le coin supérieur gauche
 
         sommets = np.concatenate((p0, n0, c0, uv0, p1, n1, c1, uv1, p2, n2, c2, uv2, p3, n3, c3, uv3))
         
+        # Face arrière (z = 0), couleur vert :
+        p4 = (1, 0, 0)
+        p5 = (0, 0, 0)
+        p6 = (0, 1, 0)
+        p7 = (1, 1, 0)
+
+        n4 = (0, 0, -1)
+        n5 = (0, 0, -1)
+        n6 = (0, 0, -1)
+        n7 = (0, 0, -1)
+
+        c4 = (0, 1, 0) # Vert
+        c5 = (0, 1, 0)
+        c6 = (0, 1, 0)
+        c7 = (0, 1, 0)
+
+        uv4 = (0, 0)
+        uv5 = (1, 0)
+        uv6 = (1, 1)
+        uv7 = (0, 1)
+
+
+        # Face droite (x = 1), couleur bleu :
+        p8 = (1, 0, 1)
+        p9 = (1, 0, 0)
+        p10 = (1, 1, 0)
+        p11 = (1, 1, 1)
+
+        n8 = (1, 0, 0)
+        n9 = (1, 0, 0)
+        n10 = (1, 0, 0)
+        n11 = (1, 0, 0)
+
+        c8 = (0, 0, 1) # Bleu
+        c9 = (0, 0, 1)
+        c10 = (0, 0, 1)
+        c11 = (0, 0, 1)
+
+        uv8 = (0, 0)
+        uv9 = (1, 0)
+        uv10 = (1, 1)
+        uv11 = (0, 1)
+
 
 
     def run(self):
