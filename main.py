@@ -10,6 +10,7 @@ import ctypes
 
 from object._3d_object import Object 
 from binds.binds import Binds
+
 class Game(object):
     """ fenêtre GLFW avec openGL """
 
@@ -30,6 +31,8 @@ class Game(object):
         self.projection_matrix = pyrr.matrix44.create_perspective_projection(
             fovy=50.0, aspect=1.0, near=0.5, far=10.0, dtype=np.float32)
         
+        self.sphere_model_matrix = pyrr.matrix44.create_from_translation([2.0, 0.0, -3.0], dtype=np.float32)
+
         #assure une bonne fluidité dans les mouvements
         
         self.translation_matrix = pyrr.matrix44.create_from_translation([0.0, 0.0, -3.0], dtype=np.float32)
@@ -163,10 +166,12 @@ class Game(object):
             GL.glBindVertexArray(self.vao)
             GL.glDrawElements(GL.GL_TRIANGLES, self.nb_indices, GL.GL_UNSIGNED_INT, None)
 
-            # Dessiner la sphère
+            # Dessiner la sphère et faire en sorte qu'elle ne bouge pas
+            sphere_model = self.sphere_model_matrix
+            GL.glUniformMatrix4fv(loc_translation, 1, GL.GL_FALSE, sphere_model)
+            GL.glUniformMatrix4fv(loc_rotation, 1, GL.GL_FALSE, pyrr.matrix44.create_identity(dtype=np.float32))
             GL.glBindVertexArray(self.sphere_vao)
             GL.glDrawElements(GL.GL_TRIANGLES, self.sphere_nb_indices, GL.GL_UNSIGNED_INT, None)
-
 
             # changement de buffer d'affichage pour éviter un effet de scintillement
             glfw.swap_buffers(self.window)
@@ -281,4 +286,3 @@ if __name__ == '__main__':
     main() 
 
 
-#commit pour le code
