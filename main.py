@@ -17,14 +17,13 @@ class Game(object):
         self.init_data()
 
         #faie bouger le cube
-        self.translation_matrix = pyrr.matrix44.create_identity(dtype=np.float32)
         self.rotation_matrix = pyrr.matrix44.create_identity(dtype=np.float32)
         self.projection_matrix = pyrr.matrix44.create_perspective_projection(
             fovy=50.0, aspect=1.0, near=0.5, far=10.0, dtype=np.float32)
         
         #assure une bonne fluidité dans les mouvements
-        t_init = pyrr.matrix44.create_from_translation([0.0, 0.0, -3.0], dtype=np.float32)
-        self.translation_matrix = pyrr.matrix44.multiply(t_init, self.translation_matrix)
+        
+        self.translation_matrix = pyrr.matrix44.create_from_translation([0.0, 0.0, -3.0], dtype=np.float32)
         self.translation_velocity = np.array([0.0, 0.0, 0.0], dtype=np.float32)
         self.rotation_velocity = np.array([0.0, 0.0], dtype=np.float32)  # [x, y]
 
@@ -82,13 +81,13 @@ class Game(object):
         uvs = [(0, 0), (1, 0), (1, 1), (0, 1)] * 6
 
         # Fusion de tous les attributs pour chaque sommet
-        vertices_cube = np.array([
+        self.vertices_cube = np.array([  # Fixed: Assign to self.vertices_cube
             positions[i] + normales[i] + couleurs[i] + uvs[i]
             for i in range(24)
         ], dtype=np.float32)
 
         # Indexation des triangles : 2 triangles par face
-        indices_cube = np.array([
+        self.indices = np.array([  # Fixed: Assign to self.indices
             0, 1, 2, 0, 2, 3,        # Face avant
             4, 5, 6, 4, 6, 7,        # Face arrière
             8, 9,10, 8,10,11,        # Face droite
@@ -96,6 +95,7 @@ class Game(object):
             16,17,18,16,18,19,        # Face supérieure
             20,21,22,20,22,23         # Face inférieure
         ], dtype=np.uint32)
+
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
 
@@ -126,7 +126,7 @@ class Game(object):
         GL.glVertexAttribPointer(3, 2, GL.GL_FLOAT, GL.GL_FALSE, stride, ctypes.c_void_p(9 * 4))
 
 
-    def generate_sphere(radius=1.0, lat_segments=16, lon_segments=32):
+    def generate_sphere(self, radius=1.0, lat_segments=16, lon_segments=32):
         vertices = []
         indices = []
         for i in range(lat_segments + 1):
@@ -141,7 +141,7 @@ class Game(object):
                 x = radius * sin_theta * cos_phi
                 y = radius * cos_theta
                 z = radius * sin_theta * sin_phi
-                # Normale (norm´ee car sph`ere unitaire)
+                # Normale (normée car sphère unitaire)
                 nx = sin_theta * cos_phi
                 ny = cos_theta
                 nz = sin_theta * sin_phi
