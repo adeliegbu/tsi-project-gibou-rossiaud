@@ -11,6 +11,7 @@ import ctypes
 from object._3d_object import Object 
 from binds.binds import Binds
 from shader.shader_program import ShaderProgram
+from camera import Camera
 
 class Game(object):
     """ fenêtre GLFW avec openGL """
