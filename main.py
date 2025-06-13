@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-import OpenGL.GL as GL
+from game import Game
 import glfw
 import numpy as np
 import time
@@ -298,5 +297,3 @@ def main():
 
 if __name__ == '__main__':
     main() 
-
-
