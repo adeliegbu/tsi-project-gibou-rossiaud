@@ -31,14 +31,16 @@ class Game(object):
         self.init_data()
 
         #faire bouger le cube
-        self.rotation_matrix = pyrr.matrix44.create_identity(dtype=np.float32)
+        self.model_matrix = pyrr.matrix44.create_from_translation([0.0,0.0,-3.0], dtype=np.float32)
         self.projection_matrix = pyrr.matrix44.create_perspective_projection(
             fovy=50.0, aspect=1.0, near=0.5, far=10.0, dtype=np.float32)
         
+        self.sphere_model_matrix = pyrr.matrix44.create_from_translation([2.0, 0.0, -3.0], dtype=np.float32)
+
         #assure une bonne fluidité dans les mouvements
         
         self.translation_matrix = pyrr.matrix44.create_from_translation([0.0, 0.0, -3.0], dtype=np.float32)
-   
+
 
     def init_window(self):
         # initialisation de la librairie glfw et du context opengl associé
@@ -149,13 +151,9 @@ class Game(object):
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
             # Envoi des matrices uniforms
-            loc_translation = GL.glGetUniformLocation(self.shader.get_id(), "translation")
-            if loc_translation != -1:
-                GL.glUniformMatrix4fv(loc_translation, 1, GL.GL_FALSE, self.translation_matrix)
-
-            loc_rotation = GL.glGetUniformLocation(self.shader.get_id(), "rotation")
-            if loc_rotation != -1:
-                GL.glUniformMatrix4fv(loc_rotation, 1, GL.GL_FALSE, self.rotation_matrix)
+            loc_model = GL.glGetUniformLocation(self.shader.get_id(), "model")
+            if loc_model != -1:
+                GL.glUniformMatrix4fv(loc_model, 1, GL.GL_FALSE, self.model_matrix)
 
             loc_projection = GL.glGetUniformLocation(self.shader.get_id(), "projection")
             if loc_projection != -1:
@@ -164,7 +162,9 @@ class Game(object):
             GL.glBindVertexArray(self.vao)
             GL.glDrawElements(GL.GL_TRIANGLES, self.nb_indices, GL.GL_UNSIGNED_INT, None)
 
-            # Dessiner la sphère
+            # Dessiner la sphère avec sa propre matrice modèle fixe
+            sphere_model = pyrr.matrix44.create_from_translation([2.0, 0.0, -3.0], dtype=np.float32)
+            GL.glUniformMatrix4fv(loc_model, 1, GL.GL_FALSE, sphere_model)
             GL.glBindVertexArray(self.sphere_vao)
             GL.glDrawElements(GL.GL_TRIANGLES, self.sphere_nb_indices, GL.GL_UNSIGNED_INT, None)
 
@@ -179,20 +179,40 @@ class Game(object):
             dt = current_time - previous_time
             previous_time = current_time
 
-            # Appliquer la translation
-            if np.linalg.norm(self.translation_velocity) > 0:
-                t = pyrr.matrix44.create_from_translation(self.translation_velocity * dt, dtype=np.float32)
-                self.translation_matrix = pyrr.matrix44.multiply(t, self.translation_matrix)
+           # Calculer la direction avant (Z négatif dans le repère objet)
+            forward = np.array([0, 0, -1, 0], dtype=np.float32)
+            # Appliquer la rotation actuelle pour obtenir la direction orientée
+            oriented_forward = pyrr.matrix44.apply_to_vector(self.model_matrix, forward)[:3]
 
-            # Appliquer la rotation
-            rx, ry = self.rotation_velocity
-            if rx != 0:
-                r = pyrr.matrix44.create_from_x_rotation(rx * dt, dtype=np.float32)
-                self.rotation_matrix = pyrr.matrix44.multiply(r, self.rotation_matrix)
-            if ry != 0:
-                r = pyrr.matrix44.create_from_y_rotation(ry * dt, dtype=np.float32)
-                self.rotation_matrix = pyrr.matrix44.multiply(r, self.rotation_matrix)
-            
+            # Calculer la direction droite (X positif dans le repère objet)
+            right = np.array([1, 0, 0, 0], dtype=np.float32)
+            oriented_right = pyrr.matrix44.apply_to_vector(self.model_matrix, right)[:3]
+
+            # Normaliser les vecteurs
+            oriented_forward = oriented_forward / np.linalg.norm(oriented_forward)
+            oriented_right = oriented_right / np.linalg.norm(oriented_right)
+
+            # Calcul du mouvement en fonction des inputs
+            movement = np.zeros(3, dtype=np.float32)
+            if self.translation_velocity[2] != 0:  # Avant/arrière
+                movement += oriented_forward * self.translation_velocity[2] * dt
+            if self.translation_velocity[0] != 0:  # Gauche/droite
+                movement += oriented_right * self.translation_velocity[0] * dt
+
+            # Appliquer le mouvement si nécessaire
+            if np.linalg.norm(movement) > 0:
+                translation = pyrr.matrix44.create_from_translation(movement, dtype=np.float32)
+                self.model_matrix = pyrr.matrix44.multiply(translation, self.model_matrix)
+                
+            # Gestion des rotations
+            if self.rotation_velocity[0] != 0:  # Rotation horizontale (Y)
+                # Créer la rotation autour du centre de l'objet
+                rot_y = pyrr.matrix44.create_from_y_rotation(-self.rotation_velocity[0] * dt, dtype=np.float32)
+                self.model_matrix = pyrr.matrix44.multiply(self.model_matrix, rot_y)
+            if self.rotation_velocity[1] != 0:  # Rotation verticale (X)
+                rot_x = pyrr.matrix44.create_from_x_rotation(-self.rotation_velocity[1] * dt, dtype=np.float32)
+                self.model_matrix = pyrr.matrix44.multiply(self.model_matrix, rot_x)
+            # Mise à jour de la matrice de projection
         glfw.terminate()
                 
         
