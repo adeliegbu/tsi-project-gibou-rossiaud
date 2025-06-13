@@ -1,9 +1,10 @@
 import numpy as np
 import OpenGL.GL as GL
 import pyrr
+import glfw
 
 class Object_3d:
-    def __init__(self, vao, position, angle, shader_program, texture, nb_sommets, taille):
+    def __init__(self, vao, position, angle, shader_program, texture, nb_sommets, taille, window):
         self.vao = vao
         self.position = position
         self.angle = angle
@@ -13,6 +14,7 @@ class Object_3d:
         self.taille = taille
         self.dir = np.array([0.0, 0.0, 1.0, 0.0], dtype=np.float32)  # Direction initiale
         self.velocity = np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32)  # Vitesse initiale
+        self.window = window
 
     def show_object(self):
         
@@ -43,3 +45,13 @@ class Object_3d:
 
         GL.glBindVertexArray(self.vao)
         GL.glDrawElements(GL.GL_TRIANGLES, self.nb_sommets, GL.GL_UNSIGNED_INT, None)
+    
+    def move_object(self, dt):
+        if glfw.get_key(self.window, glfw.KEY_W) == glfw.PRESS:
+            self.position += self.dir * 2.0 * dt
+        if glfw.get_key(self.window, glfw.KEY_S) == glfw.PRESS:
+            self.position -= self.dir * 2.0 * dt
+        if glfw.get_key(self.window, glfw.KEY_A) == glfw.PRESS:
+            self.angle[1] -= 2.0 * dt
+        if glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS:
+            self.angle[1] += 2.0 * dt

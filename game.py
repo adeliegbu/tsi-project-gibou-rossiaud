@@ -13,16 +13,14 @@ from binds.binds import Binds
 from shader.shader_program import ShaderProgram
 from camera import Camera
 from object.cube import generate_cube
+from object.sphere import generate_sphere
 import tools
 class Game(object):
     """ fenêtre GLFW avec openGL """
 
     def __init__(self):
 
-        self.translation_velocity = np.array([0.0, 0.0, 0.0], dtype=np.float32)
-        self.rotation_velocity = np.array([0.0, 0.0], dtype=np.float32)
-
-        self.binds = Binds(self.translation_velocity, self.rotation_velocity)
+        self.binds = Binds()
 
         self.window = self.init_window()
         self.init_context()
@@ -89,6 +87,7 @@ class Game(object):
         self.vao_sphere = tools.load_to_gpu(self.sphere_vertices, self.sphere_indices)
 
         self.texture_cube = tools.load_texture('texture/cube_texture.png')
+        self.texture_sphere = tools.load_texture('texture/sphere_texture.png')
 
         self.cube = Object_3d(
             vao=self.vao_cube,
@@ -96,8 +95,20 @@ class Game(object):
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_cube,
-            nb_sommets=len(self.indices_cube),
-            taille=np.array([1.0, 1.0, 1.0], dtype=np.float32)
+            nb_sommets=len(self.indices_cube)*3,
+            taille=np.array([1.0, 1.0, 1.0], dtype=np.float32),
+            window=self.window
+        )
+
+        self.sphere = Object_3d(
+            vao=self.vao_sphere,
+            position=np.array([5.0, 5.0, 5.0, 1.0], dtype=np.float32),
+            angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+            shader_program=self.shader.get_id(),
+            texture=self.texture_sphere,
+            nb_sommets=len(self.sphere_indices)*3,
+            taille=np.array([1.0, 1.0, 1.0], dtype=np.float32),
+            window=self.window
         )
 
     def run(self):
@@ -137,7 +148,10 @@ class Game(object):
             loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
             GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, view)
 
+            self.cube.move_object(dt)
+
             self.cube.show_object()
+            self.sphere.show_object()
 
             # changement de buffer d'affichage pour éviter un effet de scintillement
             glfw.swap_buffers(self.window)
@@ -155,40 +169,3 @@ class Game(object):
             else print(f'{25*"-"}\nError reading file:\n{fs_file}\n{25*"-"}')
         return self.create_program(vs_content, fs_content)
 
-def generate_sphere(radius=1.0, lat_segments=16, lon_segments=32):
-    vertices = []
-    indices = []
-    for i in range(lat_segments + 1):
-        theta = np.pi * i / lat_segments
-        sin_theta = np.sin(theta)
-        cos_theta = np.cos(theta)
-        for j in range(lon_segments + 1):
-            phi = 2 * np.pi * j / lon_segments
-            sin_phi = np.sin(phi)
-            cos_phi = np.cos(phi)
-            # Position (x, y, z)
-            x = radius * sin_theta * cos_phi
-            y = radius * cos_theta
-            z = radius * sin_theta * sin_phi
-            # Normale (normée car sphère unitaire)
-            nx = sin_theta * cos_phi
-            ny = cos_theta
-            nz = sin_theta * sin_phi
-            # Texture coordinates (u, v)
-            u = j / lon_segments
-            v = i / lat_segments
-            r, g, b = 1.0, 1.0, 1.0
-            # Interlaced vertex: position, normal, color, uv
-            vertex = [x, y, z, nx, ny, nz, r, g, b, u, v]
-            vertices.append(vertex)
-    # Faces
-    for i in range(lat_segments):
-        for j in range(lon_segments):
-            a = i * (lon_segments + 1) + j
-            b = a + lon_segments + 1
-            indices.append((a, b, a + 1))
-            indices.append((a + 1, b, b + 1))
-    return {
-    'interlaced': np.array(vertices, dtype=np.float32), # [pos, norm, color]
-    'faces': np.array(indices, dtype=np.int32) # (i0, i1, i2)
-    }
