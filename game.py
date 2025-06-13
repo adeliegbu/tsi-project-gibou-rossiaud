@@ -17,6 +17,7 @@ class Game(object):
     """ fenêtre GLFW avec openGL """
 
     def __init__(self):
+
         self.translation_velocity = np.array([0.0, 0.0, 0.0], dtype=np.float32)
         self.rotation_velocity = np.array([0.0, 0.0], dtype=np.float32)
 
@@ -24,22 +25,22 @@ class Game(object):
 
         self.window = self.init_window()
         self.init_context()
+        width, height = glfw.get_window_size(self.window)
+
 
         self.shader = ShaderProgram('shader/shader.vert', 'shader/shader.frag')
         self.shader.use()
 
         self.init_data()
 
-        # Faire bouger le cube
-        self.rotation_matrix = pyrr.matrix44.create_identity(dtype=np.float32)
+        #faire bouger le cube
+        self.model_matrix = pyrr.matrix44.create_from_translation([-1.0, -1.0, -5.0], dtype=np.float32)
         self.projection_matrix = pyrr.matrix44.create_perspective_projection(
             fovy=50.0, aspect=1.0, near=0.5, far=10.0, dtype=np.float32)
         
         #assure une bonne fluidité dans les mouvements
         
-        self.translation_matrix = pyrr.matrix44.create_from_translation([0.0, 0.0, -3.0], dtype=np.float32)
-        self.model_matrix = pyrr.matrix44.multiply(self.translation_matrix, self.rotation_matrix)
-
+        self.sphere_model_matrix = pyrr.matrix44.create_from_translation([-4.0, 1.0, -8.0], dtype=np.float32)
         # Initialiser la caméra
         self.camera = Camera(self)
 
@@ -52,11 +53,21 @@ class Game(object):
         glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
         # création et parametrage de la fenêtre
         glfw.window_hint(glfw.RESIZABLE, False)
-        window = glfw.create_window(800, 800, 'OpenGL', None, None)
+        window = glfw.create_window(1920, 1080, 'OpenGL', None, None)  # Augmenté à 1920x1080
         # parametrage de la fonction de gestion des évènements
         glfw.set_key_callback(window, self.binds.key_callback)
         return window
-
+    
+    def on_resize(self, window, width, height):
+        GL.glViewport(0, 0, width, height)
+        self.projection_matrix = pyrr.matrix44.create_perspective_projection(
+            fovy=50.0,
+            aspect=width/height,
+            near=0.1,
+            far=100.0,
+            dtype=np.float32
+        )
+        
     def init_context(self):
         # activation du context OpenGL pour la fenêtre
         glfw.make_context_current(self.window)
@@ -120,7 +131,6 @@ class Game(object):
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.sphere_ebo)
         GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.sphere_indices.nbytes, self.sphere_indices, GL.GL_STATIC_DRAW)
 
-        stride = 11 * 4  # float size
 
         # position
         GL.glEnableVertexAttribArray(0)
@@ -139,46 +149,95 @@ class Game(object):
         GL.glVertexAttribPointer(3, 2, GL.GL_FLOAT, False, stride, ctypes.c_void_p(9 * 4))
 
 
+
     def run(self):
-        while not glfw.window_should_close(self.window):
-            # Choix de la couleur de fond
-            GL.glClearColor(0.5, 0.6, 0.9, 1.0)
-            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-            # Mettre à jour la caméra
-            self.camera.update()
-            view_matrix = self.camera.create_view_matrix()
+         start = time.time()
+         frames = 0
+         previous_time = time.time()
+         # boucle d'affichage
+         while not glfw.window_should_close(self.window):
+             frames += 1
+             current_time = time.time()
+             dt = current_time - previous_time
+             previous_time = current_time
 
-            # Envoi des matrices uniforms
-            loc_model = GL.glGetUniformLocation(self.shader.get_id(), "model")
-            if loc_model != -1:
-                GL.glUniformMatrix4fv(loc_model, 1, GL.GL_FALSE, self.model_matrix)
 
-            loc_projection = GL.glGetUniformLocation(self.shader.get_id(), "projection")
-            if loc_projection != -1:
-                GL.glUniformMatrix4fv(loc_projection, 1, GL.GL_FALSE, self.projection_matrix)
+             # choix de la couleur de fond
+             GL.glClearColor(0.5, 0.6, 0.9, 1.0)
+             # nettoyage de la fenêtre : fond et profondeur
+             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-            loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
-            if loc_view != -1:
+                         # Mettre à jour la caméra
+             self.camera.update()
+             view_matrix = self.camera.create_view_matrix()
+
+             # Envoi des matrices uniforms
+             loc_model = GL.glGetUniformLocation(self.shader.get_id(), "model")
+             if loc_model != -1:
+                 GL.glUniformMatrix4fv(loc_model, 1, GL.GL_FALSE, self.model_matrix)
+
+             loc_projection = GL.glGetUniformLocation(self.shader.get_id(), "projection")
+             if loc_projection != -1:
+                 GL.glUniformMatrix4fv(loc_projection, 1, GL.GL_FALSE, self.projection_matrix)
+
+             loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
+             if loc_view != -1:
                 GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, view_matrix)
 
-            # Dessiner le cube
-            GL.glBindVertexArray(self.vao)
-            GL.glDrawElements(GL.GL_TRIANGLES, self.nb_indices, GL.GL_UNSIGNED_INT, None)
+             # Dessiner le cube
+             GL.glBindVertexArray(self.vao)
+             GL.glDrawElements(GL.GL_TRIANGLES, self.nb_indices, GL.GL_UNSIGNED_INT, None)
 
-            # Dessiner la sphère
-            sphere_model = pyrr.matrix44.create_from_translation([2.0, 0.0, -3.0], dtype=np.float32)
-            GL.glUniformMatrix4fv(loc_model, 1, GL.GL_FALSE, sphere_model)
-            GL.glBindVertexArray(self.sphere_vao)
-            GL.glDrawElements(GL.GL_TRIANGLES, self.sphere_nb_indices, GL.GL_UNSIGNED_INT, None)
+             # Dessiner la sphère
+             sphere_model = pyrr.matrix44.create_from_translation([2.0, 0.0, -3.0], dtype=np.float32)
+             GL.glUniformMatrix4fv(loc_model, 1, GL.GL_FALSE, sphere_model)
+             GL.glBindVertexArray(self.sphere_vao)
+             GL.glDrawElements(GL.GL_TRIANGLES, self.sphere_nb_indices, GL.GL_UNSIGNED_INT, None)
 
-            glfw.swap_buffers(self.window)
-            glfw.poll_events()
+             # Calculer la direction avant (Z négatif dans le repère objet)
+             forward = np.array([0, 0, -1, 0], dtype=np.float32)
+             # Appliquer la rotation actuelle pour obtenir la direction orientée
+             oriented_forward = pyrr.matrix44.apply_to_vector(self.model_matrix, forward)[:3]
+
+             # Calculer la direction droite (X positif dans le repère objet)
+             right = np.array([1, 0, 0, 0], dtype=np.float32)
+             oriented_right = pyrr.matrix44.apply_to_vector(self.model_matrix, right)[:3]
+
+             # Normaliser les vecteurs
+             oriented_forward = oriented_forward / np.linalg.norm(oriented_forward)
+             oriented_right = oriented_right / np.linalg.norm(oriented_right)
+
+             # Calcul du mouvement en fonction des inputs
+             movement = np.zeros(3, dtype=np.float32)
+             if self.translation_velocity[2] != 0:  # Avant/arrière
+                 movement += oriented_forward * self.translation_velocity[2] * dt
+             if self.translation_velocity[0] != 0:  # Gauche/droite
+                 movement += oriented_right * self.translation_velocity[0] * dt
+
+             # Appliquer le mouvement si nécessaire
+             if np.linalg.norm(movement) > 0:
+                 translation = pyrr.matrix44.create_from_translation(movement, dtype=np.float32)
+                 self.model_matrix = pyrr.matrix44.multiply(translation, self.model_matrix)
+                
+             # Gestion des rotations
+             if self.rotation_velocity[1] != 0:  # Rotation horizontale (Y)
+                 # Créer la rotation autour du centre de l'objet
+                 rot_y = pyrr.matrix44.create_from_y_rotation(-self.rotation_velocity[1] * dt, dtype=np.float32)
+                 self.model_matrix = pyrr.matrix44.multiply(self.model_matrix, rot_y)
+             if self.rotation_velocity[0] != 0:  # Rotation verticale (X)
+                 rot_x = pyrr.matrix44.create_from_x_rotation(-self.rotation_velocity[0] * dt, dtype=np.float32)
+                 self.model_matrix = pyrr.matrix44.multiply(self.model_matrix, rot_x)
+             # changement de buffer d'affichage pour éviter un effet de scintillement
+             glfw.swap_buffers(self.window)
+             # gestion des évènements
+             glfw.poll_events()
+
+         glfw.terminate()
 
     def get_cube_position(self):
         position = self.model_matrix[:3, 3]
         return position
-                
         
     def create_program_from_file(self, vs_file, fs_file):
         # creation d'un programme GPU à partir de fichiers
