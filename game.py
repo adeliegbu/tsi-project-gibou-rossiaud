@@ -8,7 +8,7 @@ import pyrr
 from PIL import Image
 import ctypes
 
-from object._3d_object import Object 
+from object._3d_object import Object_3d 
 from binds.binds import Binds
 from shader.shader_program import ShaderProgram
 from camera import Camera
@@ -63,7 +63,7 @@ class Game(object):
 
 
     def init_data(self):
-        obj = Object()
+        obj = Object_3d()
         obj.cube()
         self.vertices_cube = obj.vertices_cube
         self.indices = obj.indices

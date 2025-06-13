@@ -1,9 +1,9 @@
 import numpy as np
 
-class Object:
+class Object_3d:
     def __init__(self):
         pass
-    
+
     def cube(self):
                 # On place ici tous les sommets en une seule liste
         positions = [
