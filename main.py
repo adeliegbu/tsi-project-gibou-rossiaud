@@ -107,7 +107,7 @@ class Game(object):
 
         self.ebo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ebo)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indices_cube.nbytes, self.indices_cube, GL.GL_STATIC_DRAW)
+        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL.GL_STATIC_DRAW)
         
         stride = 11 * 4  # 11 floats * 4 bytes
 
@@ -127,7 +127,7 @@ class Game(object):
         GL.glEnableVertexAttribArray(3)
         GL.glVertexAttribPointer(3, 2, GL.GL_FLOAT, GL.GL_FALSE, stride, ctypes.c_void_p(9 * 4))
 
-        self.nb_indices = len(self.indices_cube)
+        self.nb_indices = len(self.indices)
 
 
 
@@ -309,4 +309,7 @@ def main():
     glfw.terminate()
 
 if __name__ == '__main__':
-    main()
+    main() 
+
+
+#commit pour le code
