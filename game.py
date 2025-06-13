@@ -17,6 +17,7 @@ class Game(object):
     """ fenêtre GLFW avec openGL """
 
     def __init__(self):
+
         self.translation_velocity = np.array([0.0, 0.0, 0.0], dtype=np.float32)
         self.rotation_velocity = np.array([0.0, 0.0], dtype=np.float32)
 
@@ -24,6 +25,8 @@ class Game(object):
 
         self.window = self.init_window()
         self.init_context()
+        width, height = glfw.get_window_size(self.window)
+
 
         self.shader = ShaderProgram('shader/shader.vert', 'shader/shader.frag')
         self.shader.use()
@@ -31,11 +34,12 @@ class Game(object):
         self.init_data()
 
         #faire bouger le cube
-        self.model_matrix = pyrr.matrix44.create_from_translation([0.0, 0.0, -3.0], dtype=np.float32)
+        self.model_matrix = pyrr.matrix44.create_from_translation([-1.0, -1.0, -5.0], dtype=np.float32)
         self.projection_matrix = pyrr.matrix44.create_perspective_projection(
-            fovy=50.0, aspect=1.0, near=0.5, far=100.0, dtype=np.float32)
+        fovy=50.0,aspect=width/height,near=0.1,far=100.0,dtype=np.float32
+        )
         # Position fixe pour la sphère
-        self.sphere_model_matrix = pyrr.matrix44.create_from_translation([2.0, 0.0, -5.0], dtype=np.float32)
+        self.sphere_model_matrix = pyrr.matrix44.create_from_translation([-4.0, 1.0, -8.0], dtype=np.float32)
 
     def init_window(self):
         # initialisation de la librairie glfw et du context opengl associé
@@ -46,7 +50,7 @@ class Game(object):
         glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
         # création et parametrage de la fenêtre
         glfw.window_hint(glfw.RESIZABLE, False)
-        window = glfw.create_window(800, 800, 'OpenGL', None, None)
+        window = glfw.create_window(1920, 1080, 'OpenGL', None, None)  # Augmenté à 1920x1080
         # parametrage de la fonction de gestion des évènements
         glfw.set_key_callback(window, self.binds.key_callback)
         return window
@@ -205,12 +209,12 @@ class Game(object):
                  self.model_matrix = pyrr.matrix44.multiply(translation, self.model_matrix)
                 
              # Gestion des rotations
-             if self.rotation_velocity[0] != 0:  # Rotation horizontale (Y)
+             if self.rotation_velocity[1] != 0:  # Rotation horizontale (Y)
                  # Créer la rotation autour du centre de l'objet
-                 rot_y = pyrr.matrix44.create_from_y_rotation(self.rotation_velocity[0] * dt, dtype=np.float32)
+                 rot_y = pyrr.matrix44.create_from_y_rotation(-self.rotation_velocity[1] * dt, dtype=np.float32)
                  self.model_matrix = pyrr.matrix44.multiply(self.model_matrix, rot_y)
-             if self.rotation_velocity[1] != 0:  # Rotation verticale (X)
-                 rot_x = pyrr.matrix44.create_from_x_rotation(self.rotation_velocity[1] * dt, dtype=np.float32)
+             if self.rotation_velocity[0] != 0:  # Rotation verticale (X)
+                 rot_x = pyrr.matrix44.create_from_x_rotation(-self.rotation_velocity[0] * dt, dtype=np.float32)
                  self.model_matrix = pyrr.matrix44.multiply(self.model_matrix, rot_x)
              # changement de buffer d'affichage pour éviter un effet de scintillement
              glfw.swap_buffers(self.window)
