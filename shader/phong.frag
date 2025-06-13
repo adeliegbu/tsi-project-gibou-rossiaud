@@ -6,8 +6,14 @@ out vec4 color;
 in vec3 coordonnee_3d;
 in vec3 coordonnee_3d_locale;
 in vec3 vnormale;
+in vec3 vColor;
+in vec2 vTexture;
 
-vec3 light = vec3(0.5,0.5,5.0);
+
+uniform sampler2D tex;
+
+
+vec3 light = vec3(-5.0,10.0,5.0);
 
 //Un Fragment Shader minimaliste
 void main (void)
@@ -22,7 +28,9 @@ void main (void)
   float ambiant  = 0.2;
 
   vec4 white = vec4(1.0,1.0,1.0,0.0);
-  vec4 color_final = vec4(1.0,0.5,0.5,0.0);
+  vec4 color_texture = texture(tex, vTexture);
+
+  vec4 color_final = vec4(vColor, 1.0) * color_texture;
 
   color = (ambiant+diffuse)*color_final+specular*white;
 

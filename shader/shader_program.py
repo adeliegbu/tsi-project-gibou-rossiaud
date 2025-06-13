@@ -28,7 +28,7 @@ class ShaderProgram:
         return shader_id  
 
     def create_program(self, vertex_source, fragment_source):
-        # creation d'un programme GPU ´
+        # creation d'un programme GPU
         vs_id = self.compile_shader(vertex_source, GL.GL_VERTEX_SHADER)
         fs_id = self.compile_shader(fragment_source, GL.GL_FRAGMENT_SHADER)
         if vs_id and fs_id:

@@ -1,48 +1,45 @@
 import numpy as np
+import OpenGL.GL as GL
+import pyrr
 
 class Object_3d:
-    def __init__(self):
-        pass
+    def __init__(self, vao, position, angle, shader_program, texture, nb_sommets, taille):
+        self.vao = vao
+        self.position = position
+        self.angle = angle
+        self.shader_program = shader_program
+        self.texture = texture
+        self.nb_sommets = nb_sommets
+        self.taille = taille
+        self.dir = np.array([0.0, 0.0, 1.0, 0.0], dtype=np.float32)  # Direction initiale
+        self.velocity = np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32)  # Vitesse initiale
 
-    def cube(self):
-                # On place ici tous les sommets en une seule liste
-        positions = [
-            # Face avant
-            (0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1),
-            # Face arrière
-            (1, 0, 0), (0, 0, 0), (0, 1, 0), (1, 1, 0),
-            # Face droite
-            (1, 0, 1), (1, 0, 0), (1, 1, 0), (1, 1, 1),
-            # Face gauche
-            (0, 0, 0), (0, 0, 1), (0, 1, 1), (0, 1, 0),
-            # Face supérieure
-            (0, 1, 1), (1, 1, 1), (1, 1, 0), (0, 1, 0),
-            # Face inférieure
-            (0, 0, 0), (1, 0, 0), (1, 0, 1), (0, 0, 1),
-        ]
+    def show_object(self):
+        
+        GL.glUseProgram(self.shader_program)
 
-        normales = [
-            (0, 0, 1)] * 4 + [(0, 0, -1)] * 4 + [(1, 0, 0)] * 4 + \
-            [(-1, 0, 0)] * 4 + [(0, 1, 0)] * 4 + [(0, -1, 0)] * 4
+        rot4x = pyrr.matrix44.create_from_x_rotation(self.angle[0])
+        rot4y = pyrr.matrix44.create_from_y_rotation(self.angle[1])
+        rot4z = pyrr.matrix44.create_from_z_rotation(self.angle[2])
+        rot4 = pyrr.matrix44.multiply(rot4x,rot4y)
+        rot4 = pyrr.matrix44.multiply(rot4, rot4z)
 
-        couleurs = [
-            (1, 0, 0)] * 4 + [(0, 1, 0)] * 4 + [(0, 0, 1)] * 4 + \
-            [(1, 1, 0)] * 4 + [(0, 1, 1)] * 4 + [(1, 0, 1)] * 4
+        self.dir = pyrr.matrix44.apply_to_vector(rot4, np.array([0.0, 0.0, 1.0, 0.0], dtype=np.float32))
 
-        uvs = [(0, 0), (1, 0), (1, 1), (0, 1)] * 6
+        trans = pyrr.matrix44.create_from_translation(self.position)
 
-        # Fusion de tous les attributs pour chaque sommet
-        self.vertices_cube = np.array([  # Fixed: Assign to self.vertices_cube
-            positions[i] + normales[i] + couleurs[i] + uvs[i]
-            for i in range(24)
-        ], dtype=np.float32)
+        self.model_matrix = rot4 @ trans
 
-        # Indexation des triangles : 2 triangles par face
-        self.indices = np.array([  # Fixed: Assign to self.indices
-            0, 1, 2, 0, 2, 3,        # Face avant
-            4, 5, 6, 4, 6, 7,        # Face arrière
-            8, 9,10, 8,10,11,        # Face droite
-            12,13,14,12,14,15,        # Face gauche
-            16,17,18,16,18,19,        # Face supérieure
-            20,21,22,20,22,23         # Face inférieure
-        ], dtype=np.uint32)
+        if self.texture is not None:
+            GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture) 
+
+        prog = GL.glGetIntegerv(GL.GL_CURRENT_PROGRAM)
+
+        loc = GL.glGetUniformLocation(prog, "model")
+        if loc == -1:
+            print("Uniform 'model' not found in shader program.")
+            return
+        GL.glUniformMatrix4fv(loc, 1, GL.GL_FALSE, self.model_matrix)
+
+        GL.glBindVertexArray(self.vao)
+        GL.glDrawElements(GL.GL_TRIANGLES, self.nb_sommets, GL.GL_UNSIGNED_INT, None)

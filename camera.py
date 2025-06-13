@@ -3,14 +3,14 @@ import numpy as np
 
 class Camera:
     def __init__(self, target_object):
-        self.offset = np.array([0.0, 2.0, 5.0], dtype=np.float32)  # Position relative à l'objet
+        self.offset = np.array([0.0, 2.0, 5.0], dtype=np.float32)  # Distance constante entre la caméra et l'objet
         self.eye = np.array([0.0, 0.0, 3.0], dtype=np.float32)  # Position initiale de la caméra
-        self.target = np.array([0.0, 0.0, 0.0], dtype=np.float32)  # Position cible
+        self.target = np.array([0.0, 0.0, 0.0], dtype=np.float32)  # Position cible (objet suivi)
         self.up = np.array([0.0, 1.0, 0.0], dtype=np.float32)  # Vecteur "up" de la caméra
         self.target_object = target_object  # Objet suivi (le cube)
 
     def update(self):
-        # Récupérer la position actuelle du cube
+        # Récupérer la position actuelle de l'objet suivi
         if self.target_object is not None:
             self.target = self.target_object.get_cube_position()
         else:

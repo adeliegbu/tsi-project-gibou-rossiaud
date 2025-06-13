@@ -12,7 +12,8 @@ from object._3d_object import Object_3d
 from binds.binds import Binds
 from shader.shader_program import ShaderProgram
 from camera import Camera
-
+from object.cube import generate_cube
+import tools
 class Game(object):
     """ fenêtre GLFW avec openGL """
 
@@ -28,19 +29,17 @@ class Game(object):
         width, height = glfw.get_window_size(self.window)
 
 
-        self.shader = ShaderProgram('shader/shader.vert', 'shader/shader.frag')
+        self.shader = ShaderProgram('shader/phong.vert', 'shader/phong.frag')
         self.shader.use()
 
         self.init_data()
 
         #faire bouger le cube
-        self.model_matrix = pyrr.matrix44.create_from_translation([-1.0, -1.0, -5.0], dtype=np.float32)
         self.projection_matrix = pyrr.matrix44.create_perspective_projection(
             fovy=50.0, aspect=1.0, near=0.5, far=10.0, dtype=np.float32)
         
         #assure une bonne fluidité dans les mouvements
         
-        self.sphere_model_matrix = pyrr.matrix44.create_from_translation([-4.0, 1.0, -8.0], dtype=np.float32)
         # Initialiser la caméra
         self.camera = Camera(self)
 
@@ -52,7 +51,7 @@ class Game(object):
         glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, GL.GL_TRUE)
         glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
         # création et parametrage de la fenêtre
-        glfw.window_hint(glfw.RESIZABLE, False)
+        glfw.window_hint(glfw.RESIZABLE, True)
         window = glfw.create_window(1920, 1080, 'OpenGL', None, None)  # Augmenté à 1920x1080
         # parametrage de la fonction de gestion des évènements
         glfw.set_key_callback(window, self.binds.key_callback)
@@ -77,168 +76,77 @@ class Game(object):
 
 
     def init_data(self):
-        obj = Object_3d()
-        obj.cube()
-        self.vertices_cube = obj.vertices_cube
-        self.indices = obj.indices
+        # Création des données pour le cube
+        self.vertices_cube, self.indices_cube = generate_cube()
 
         sphere_data = generate_sphere(radius=1.0, lat_segments=32, lon_segments=64)
         self.sphere_vertices = sphere_data['interlaced']
         self.sphere_indices = sphere_data['faces'].reshape(-1)
-        self.sphere_nb_indices = len(self.sphere_indices)
 
+        # Création du VAO pour le cube
+        self.vao_cube = tools.load_to_gpu(self.vertices_cube, self.indices_cube)
+        # Création du VAO pour la sphère
+        self.vao_sphere = tools.load_to_gpu(self.sphere_vertices, self.sphere_indices)
 
-        self.vao = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.vao)
+        self.texture_cube = tools.load_texture('texture/cube_texture.png')
 
-        self.vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.vertices_cube.nbytes, self.vertices_cube, GL.GL_STATIC_DRAW)
-
-        self.ebo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ebo)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL.GL_STATIC_DRAW)
-        
-        stride = 11 * 4  # 11 floats * 4 bytes
-
-        # position (location = 0)
-        GL.glEnableVertexAttribArray(0)
-        GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, stride, ctypes.c_void_p(0))
-
-        # normale (location = 1)
-        GL.glEnableVertexAttribArray(1)
-        GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, stride, ctypes.c_void_p(3 * 4))
-
-        # couleur (location = 2)
-        GL.glEnableVertexAttribArray(2)
-        GL.glVertexAttribPointer(2, 3, GL.GL_FLOAT, GL.GL_FALSE, stride, ctypes.c_void_p(6 * 4))
-
-        # texture UV (location = 3)
-        GL.glEnableVertexAttribArray(3)
-        GL.glVertexAttribPointer(3, 2, GL.GL_FLOAT, GL.GL_FALSE, stride, ctypes.c_void_p(9 * 4))
-
-        self.nb_indices = len(self.indices)
-
-        #VAO VBO VEO et maillage pour sphère
-        self.sphere_vao = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.sphere_vao)
-
-        self.sphere_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sphere_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.sphere_vertices.nbytes, self.sphere_vertices, GL.GL_STATIC_DRAW)
-
-        self.sphere_ebo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.sphere_ebo)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.sphere_indices.nbytes, self.sphere_indices, GL.GL_STATIC_DRAW)
-
-
-        # position
-        GL.glEnableVertexAttribArray(0)
-        GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, False, stride, ctypes.c_void_p(0))
-
-        # normal
-        GL.glEnableVertexAttribArray(1)
-        GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, False, stride, ctypes.c_void_p(3 * 4))
-
-        # color
-        GL.glEnableVertexAttribArray(2)
-        GL.glVertexAttribPointer(2, 3, GL.GL_FLOAT, False, stride, ctypes.c_void_p(6 * 4))
-
-        # uv
-        GL.glEnableVertexAttribArray(3)
-        GL.glVertexAttribPointer(3, 2, GL.GL_FLOAT, False, stride, ctypes.c_void_p(9 * 4))
-
-
+        self.cube = Object_3d(
+            vao=self.vao_cube,
+            position=np.array([5.0, 5.0, 5.0, 1.0], dtype=np.float32),
+            angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+            shader_program=self.shader.get_id(),
+            texture=self.texture_cube,
+            nb_sommets=len(self.indices_cube),
+            taille=np.array([1.0, 1.0, 1.0], dtype=np.float32)
+        )
 
     def run(self):
 
-         start = time.time()
-         frames = 0
-         previous_time = time.time()
-         # boucle d'affichage
-         while not glfw.window_should_close(self.window):
-             frames += 1
-             current_time = time.time()
-             dt = current_time - previous_time
-             previous_time = current_time
+        frames = 0
+        previous_time = time.time()
+        # boucle d'affichage
+        while not glfw.window_should_close(self.window):
+            frames += 1
+            current_time = time.time()
+            dt = current_time - previous_time
+            previous_time = current_time
 
 
-             # choix de la couleur de fond
-             GL.glClearColor(0.5, 0.6, 0.9, 1.0)
-             # nettoyage de la fenêtre : fond et profondeur
-             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+            # choix de la couleur de fond
+            GL.glClearColor(0.5, 0.6, 0.9, 1.0)
+            # nettoyage de la fenêtre : fond et profondeur
+            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-                         # Mettre à jour la caméra
-             self.camera.update()
-             view_matrix = self.camera.create_view_matrix()
 
-             # Envoi des matrices uniforms
-             loc_model = GL.glGetUniformLocation(self.shader.get_id(), "model")
-             if loc_model != -1:
-                 GL.glUniformMatrix4fv(loc_model, 1, GL.GL_FALSE, self.model_matrix)
+            loc_projection = GL.glGetUniformLocation(self.shader.get_id(), "projection")
+            if loc_projection != -1:
+                GL.glUniformMatrix4fv(loc_projection, 1, GL.GL_FALSE, self.projection_matrix)
 
-             loc_projection = GL.glGetUniformLocation(self.shader.get_id(), "projection")
-             if loc_projection != -1:
-                 GL.glUniformMatrix4fv(loc_projection, 1, GL.GL_FALSE, self.projection_matrix)
+            pos3 = np.array(self.cube.position[:3], dtype=np.float32)
+            dir3 = np.array(self.cube.dir[:3], dtype=np.float32)
+            camera_pos = pos3 - dir3 * 5.0 + np.array([0.0, 2.0, 0.0], dtype=np.float32)
 
-             loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
-             if loc_view != -1:
-                GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, view_matrix)
+            view = pyrr.matrix44.create_look_at(
+                eye=camera_pos,
+                target=pos3,
+                up=np.array([0.0, 1.0, 0.0], dtype=np.float32),
+                dtype=np.float32
+            )
 
-             # Dessiner le cube
-             GL.glBindVertexArray(self.vao)
-             GL.glDrawElements(GL.GL_TRIANGLES, self.nb_indices, GL.GL_UNSIGNED_INT, None)
+            GL.glUseProgram(self.shader.get_id())
+            loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
+            GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, view)
 
-             # Dessiner la sphère
-             sphere_model = pyrr.matrix44.create_from_translation([2.0, 0.0, -3.0], dtype=np.float32)
-             GL.glUniformMatrix4fv(loc_model, 1, GL.GL_FALSE, sphere_model)
-             GL.glBindVertexArray(self.sphere_vao)
-             GL.glDrawElements(GL.GL_TRIANGLES, self.sphere_nb_indices, GL.GL_UNSIGNED_INT, None)
+            self.cube.show_object()
 
-             # Calculer la direction avant (Z négatif dans le repère objet)
-             forward = np.array([0, 0, -1, 0], dtype=np.float32)
-             # Appliquer la rotation actuelle pour obtenir la direction orientée
-             oriented_forward = pyrr.matrix44.apply_to_vector(self.model_matrix, forward)[:3]
+            # changement de buffer d'affichage pour éviter un effet de scintillement
+            glfw.swap_buffers(self.window)
+            # gestion des évènements
+            glfw.poll_events()
 
-             # Calculer la direction droite (X positif dans le repère objet)
-             right = np.array([1, 0, 0, 0], dtype=np.float32)
-             oriented_right = pyrr.matrix44.apply_to_vector(self.model_matrix, right)[:3]
+        glfw.terminate()
 
-             # Normaliser les vecteurs
-             oriented_forward = oriented_forward / np.linalg.norm(oriented_forward)
-             oriented_right = oriented_right / np.linalg.norm(oriented_right)
-
-             # Calcul du mouvement en fonction des inputs
-             movement = np.zeros(3, dtype=np.float32)
-             if self.translation_velocity[2] != 0:  # Avant/arrière
-                 movement += oriented_forward * self.translation_velocity[2] * dt
-             if self.translation_velocity[0] != 0:  # Gauche/droite
-                 movement += oriented_right * self.translation_velocity[0] * dt
-
-             # Appliquer le mouvement si nécessaire
-             if np.linalg.norm(movement) > 0:
-                 translation = pyrr.matrix44.create_from_translation(movement, dtype=np.float32)
-                 self.model_matrix = pyrr.matrix44.multiply(translation, self.model_matrix)
                 
-             # Gestion des rotations
-             if self.rotation_velocity[1] != 0:  # Rotation horizontale (Y)
-                 # Créer la rotation autour du centre de l'objet
-                 rot_y = pyrr.matrix44.create_from_y_rotation(-self.rotation_velocity[1] * dt, dtype=np.float32)
-                 self.model_matrix = pyrr.matrix44.multiply(self.model_matrix, rot_y)
-             if self.rotation_velocity[0] != 0:  # Rotation verticale (X)
-                 rot_x = pyrr.matrix44.create_from_x_rotation(-self.rotation_velocity[0] * dt, dtype=np.float32)
-                 self.model_matrix = pyrr.matrix44.multiply(self.model_matrix, rot_x)
-             # changement de buffer d'affichage pour éviter un effet de scintillement
-             glfw.swap_buffers(self.window)
-             # gestion des évènements
-             glfw.poll_events()
-
-         glfw.terminate()
-
-    def get_cube_position(self):
-        position = self.model_matrix[:3, 3]
-        return position
-        
     def create_program_from_file(self, vs_file, fs_file):
         # creation d'un programme GPU à partir de fichiers
         vs_content = open(vs_file, 'r').read() if os.path.exists(vs_file)\
