@@ -46,12 +46,12 @@ class Object_3d:
         GL.glBindVertexArray(self.vao)
         GL.glDrawElements(GL.GL_TRIANGLES, self.nb_sommets, GL.GL_UNSIGNED_INT, None)
     
-    def move_object(self, dt):
+    def move_object(self, dt, speed):
         if glfw.get_key(self.window, glfw.KEY_W) == glfw.PRESS:
-            self.position += self.dir * 2.0 * dt
+            self.position += self.dir * speed * dt
         if glfw.get_key(self.window, glfw.KEY_S) == glfw.PRESS:
-            self.position -= self.dir * 2.0 * dt
+            self.position -= self.dir * speed * dt
         if glfw.get_key(self.window, glfw.KEY_A) == glfw.PRESS:
-            self.angle[1] -= 2.0 * dt
+            self.angle[1] -= speed * dt
         if glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS:
-            self.angle[1] += 2.0 * dt
+            self.angle[1] += speed * dt

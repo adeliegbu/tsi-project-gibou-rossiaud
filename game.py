@@ -12,6 +12,7 @@ from object._3d_object import Object_3d
 from binds.binds import Binds
 from shader.shader_program import ShaderProgram
 from camera import Camera
+from object.sol import generate_sol
 from object.cube import generate_cube
 from object.sphere import generate_sphere
 import tools
@@ -34,12 +35,8 @@ class Game(object):
 
         #faire bouger le cube
         self.projection_matrix = pyrr.matrix44.create_perspective_projection(
-            fovy=50.0, aspect=1.0, near=0.5, far=10.0, dtype=np.float32)
+            fovy=50.0, aspect=1.0, near=0.5, far=100.0, dtype=np.float32)
         
-        #assure une bonne fluidité dans les mouvements
-        
-        # Initialiser la caméra
-        self.camera = Camera(self)
 
     def init_window(self):
         # initialisation de la librairie glfw et du context opengl associé
@@ -55,15 +52,6 @@ class Game(object):
         glfw.set_key_callback(window, self.binds.key_callback)
         return window
     
-    def on_resize(self, window, width, height):
-        GL.glViewport(0, 0, width, height)
-        self.projection_matrix = pyrr.matrix44.create_perspective_projection(
-            fovy=50.0,
-            aspect=width/height,
-            near=0.1,
-            far=100.0,
-            dtype=np.float32
-        )
         
     def init_context(self):
         # activation du context OpenGL pour la fenêtre
@@ -74,6 +62,8 @@ class Game(object):
 
 
     def init_data(self):
+        self.vertices_sol, self.indices_sol, self.size_sol = generate_sol(100)
+
         # Création des données pour le cube
         self.vertices_cube, self.indices_cube = generate_cube()
 
@@ -81,17 +71,31 @@ class Game(object):
         self.sphere_vertices = sphere_data['interlaced']
         self.sphere_indices = sphere_data['faces'].reshape(-1)
 
+        # Création du VAO pour le sol   
+        self.vao_sol = tools.load_to_gpu(self.vertices_sol, self.indices_sol)
         # Création du VAO pour le cube
         self.vao_cube = tools.load_to_gpu(self.vertices_cube, self.indices_cube)
         # Création du VAO pour la sphère
         self.vao_sphere = tools.load_to_gpu(self.sphere_vertices, self.sphere_indices)
 
+        self.texture_sol = tools.load_texture('texture/sphere_texture.png')
         self.texture_cube = tools.load_texture('texture/cube_texture.png')
         self.texture_sphere = tools.load_texture('texture/sphere_texture.png')
 
+        self.sol = Object_3d(
+            vao=self.vao_sol,
+            position=np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32),
+            angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+            shader_program=self.shader.get_id(),
+            texture=self.texture_sol,
+            nb_sommets=len(self.indices_sol)*3,
+            taille=np.array([self.size_sol, 0.0, self.size_sol], dtype=np.float32),
+            window=self.window
+        )
+
         self.cube = Object_3d(
             vao=self.vao_cube,
-            position=np.array([5.0, 5.0, 5.0, 1.0], dtype=np.float32),
+            position=np.array([5.0, 0.0, 5.0, 1.0], dtype=np.float32),
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_cube,
@@ -102,7 +106,7 @@ class Game(object):
 
         self.sphere = Object_3d(
             vao=self.vao_sphere,
-            position=np.array([5.0, 5.0, 5.0, 1.0], dtype=np.float32),
+            position=np.array([5.0, 0.5, 5.0, 1.0], dtype=np.float32),
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_sphere,
@@ -148,8 +152,9 @@ class Game(object):
             loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
             GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, view)
 
-            self.cube.move_object(dt)
+            self.cube.move_object(dt, speed=5.0)
 
+            self.sol.show_object()
             self.cube.show_object()
             self.sphere.show_object()
 
