@@ -7,10 +7,18 @@ import os
 import pyrr
 from PIL import Image
 import ctypes
+
+from object._3d_object import Object 
+from binds.binds import Binds
 class Game(object):
     """ fenêtre GLFW avec openGL """
 
     def __init__(self):
+        self.translation_velocity = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+        self.rotation_velocity = np.array([0.0, 0.0], dtype=np.float32)
+
+        self.binds = Binds(self.translation_velocity, self.rotation_velocity)
+        
         self.window = self.init_window()
         self.init_context()
         self.init_programs()
@@ -25,10 +33,8 @@ class Game(object):
         #assure une bonne fluidité dans les mouvements
         
         self.translation_matrix = pyrr.matrix44.create_from_translation([0.0, 0.0, -3.0], dtype=np.float32)
-        self.translation_velocity = np.array([0.0, 0.0, 0.0], dtype=np.float32)
-        self.rotation_velocity = np.array([0.0, 0.0], dtype=np.float32)  # [x, y]
-        
-        
+
+   
 
     def init_window(self):
         # initialisation de la librairie glfw et du context opengl associé
@@ -41,7 +47,7 @@ class Game(object):
         glfw.window_hint(glfw.RESIZABLE, False)
         window = glfw.create_window(800, 800, 'OpenGL', None, None)
         # parametrage de la fonction de gestion des évènements
-        glfw.set_key_callback(window, self.key_callback)
+        glfw.set_key_callback(window, self.binds.key_callback)
         return window
 
     def init_context(self):
@@ -56,47 +62,10 @@ class Game(object):
         GL.glUseProgram(self.program)
 
     def init_data(self):
-        # On place ici tous les sommets en une seule liste
-        positions = [
-            # Face avant
-            (0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1),
-            # Face arrière
-            (1, 0, 0), (0, 0, 0), (0, 1, 0), (1, 1, 0),
-            # Face droite
-            (1, 0, 1), (1, 0, 0), (1, 1, 0), (1, 1, 1),
-            # Face gauche
-            (0, 0, 0), (0, 0, 1), (0, 1, 1), (0, 1, 0),
-            # Face supérieure
-            (0, 1, 1), (1, 1, 1), (1, 1, 0), (0, 1, 0),
-            # Face inférieure
-            (0, 0, 0), (1, 0, 0), (1, 0, 1), (0, 0, 1),
-        ]
-
-        normales = [
-            (0, 0, 1)] * 4 + [(0, 0, -1)] * 4 + [(1, 0, 0)] * 4 + \
-            [(-1, 0, 0)] * 4 + [(0, 1, 0)] * 4 + [(0, -1, 0)] * 4
-
-        couleurs = [
-            (1, 0, 0)] * 4 + [(0, 1, 0)] * 4 + [(0, 0, 1)] * 4 + \
-            [(1, 1, 0)] * 4 + [(0, 1, 1)] * 4 + [(1, 0, 1)] * 4
-
-        uvs = [(0, 0), (1, 0), (1, 1), (0, 1)] * 6
-
-        # Fusion de tous les attributs pour chaque sommet
-        self.vertices_cube = np.array([  # Fixed: Assign to self.vertices_cube
-            positions[i] + normales[i] + couleurs[i] + uvs[i]
-            for i in range(24)
-        ], dtype=np.float32)
-
-        # Indexation des triangles : 2 triangles par face
-        self.indices = np.array([  # Fixed: Assign to self.indices
-            0, 1, 2, 0, 2, 3,        # Face avant
-            4, 5, 6, 4, 6, 7,        # Face arrière
-            8, 9,10, 8,10,11,        # Face droite
-            12,13,14,12,14,15,        # Face gauche
-            16,17,18,16,18,19,        # Face supérieure
-            20,21,22,20,22,23         # Face inférieure
-        ], dtype=np.uint32)
+        obj = Object()
+        obj.cube()
+        self.vertices_cube = obj.vertices_cube
+        self.indices = obj.indices
 
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
@@ -225,44 +194,7 @@ class Game(object):
             
         glfw.terminate()
                 
-    
-    def key_callback(self, win, key, scancode, action, mods):
-        # sortie du programme si appui sur la touche 'echap'
-        if action == glfw.PRESS:
-            if key == glfw.KEY_ESCAPE:
-                glfw.set_window_should_close(win, True)
-            elif key == glfw.KEY_W:
-                self.translation_velocity[1] = 1.0
-            elif key == glfw.KEY_S:
-                self.translation_velocity[1] = -1.0
-            elif key == glfw.KEY_A:
-                self.translation_velocity[0] = -1.0
-            elif key == glfw.KEY_D:
-                self.translation_velocity[0] = 1.0
-            elif key == glfw.KEY_UP:
-                self.rotation_velocity[0] = 1.0
-            elif key == glfw.KEY_DOWN:
-                self.rotation_velocity[0] = -1.0
-            elif key == glfw.KEY_LEFT:
-                self.rotation_velocity[1] = 1.0
-            elif key == glfw.KEY_RIGHT:
-                self.rotation_velocity[1] = -1.0
-            elif key == glfw.KEY_E:
-                self.translation_velocity[2] = 1.0
-            elif key == glfw.KEY_R:
-                self.translation_velocity[2] = -1.0
 
-        elif action == glfw.RELEASE:
-            if key in (glfw.KEY_W, glfw.KEY_S):
-                self.translation_velocity[1] = 0.0
-            elif key in (glfw.KEY_A, glfw.KEY_D):
-                self.translation_velocity[0] = 0.0
-            elif key in (glfw.KEY_UP, glfw.KEY_DOWN):
-                self.rotation_velocity[0] = 0.0
-            elif key in (glfw.KEY_LEFT, glfw.KEY_RIGHT):
-                self.rotation_velocity[1] = 0.0
-            if key in (glfw.KEY_E, glfw.KEY_R):
-                self.translation_velocity[2] = 0.0
 
     def compile_shader(self, shader_content, shader_type):
         # compilation d'un shader donne selon son type ´
