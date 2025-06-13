@@ -16,7 +16,8 @@ class Game(object):
         self.init_programs()
         self.init_data()
 
-        #faie bouger le cube
+        #faire bouger le cube
+        self.translation_matrix = pyrr.matrix44.create_identity(dtype=np.float32)
         self.rotation_matrix = pyrr.matrix44.create_identity(dtype=np.float32)
         self.projection_matrix = pyrr.matrix44.create_perspective_projection(
             fovy=50.0, aspect=1.0, near=0.5, far=10.0, dtype=np.float32)
@@ -26,7 +27,8 @@ class Game(object):
         self.translation_matrix = pyrr.matrix44.create_from_translation([0.0, 0.0, -3.0], dtype=np.float32)
         self.translation_velocity = np.array([0.0, 0.0, 0.0], dtype=np.float32)
         self.rotation_velocity = np.array([0.0, 0.0], dtype=np.float32)  # [x, y]
-
+        
+        
 
     def init_window(self):
         # initialisation de la librairie glfw et du context opengl associé
@@ -50,7 +52,7 @@ class Game(object):
         GL.glEnable(GL.GL_DEPTH_TEST)
 
     def init_programs(self):
-        self.program = self.create_program_from_file('phong.vert', 'phong.frag')
+        self.program = self.create_program_from_file('shader.vert', 'shader.frag')
         GL.glUseProgram(self.program)
 
     def init_data(self):
@@ -101,12 +103,12 @@ class Game(object):
 
         self.vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.vertices_cube.nbytes, self.vertices_cube, GL.GL_STATIC_DRAW)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices_cube.nbytes, vertices_cube, GL.GL_STATIC_DRAW)
 
         self.ebo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.ebo)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL.GL_STATIC_DRAW)
-
+        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indices_cube.nbytes, indices_cube, GL.GL_STATIC_DRAW)
+        
         stride = 11 * 4  # 11 floats * 4 bytes
 
         # position (location = 0)
@@ -124,6 +126,9 @@ class Game(object):
         # texture UV (location = 3)
         GL.glEnableVertexAttribArray(3)
         GL.glVertexAttribPointer(3, 2, GL.GL_FLOAT, GL.GL_FALSE, stride, ctypes.c_void_p(9 * 4))
+
+        self.nb_indices = len(indices_cube)
+
 
 
     def generate_sphere(self, radius=1.0, lat_segments=16, lon_segments=32):
@@ -190,6 +195,9 @@ class Game(object):
             if loc_projection != -1:
                 GL.glUniformMatrix4fv(loc_projection, 1, GL.GL_FALSE, self.projection_matrix)
 
+            GL.glBindVertexArray(self.vao)
+            GL.glDrawElements(GL.GL_TRIANGLES, self.nb_indices, GL.GL_UNSIGNED_INT, None)
+
 
             # changement de buffer d'affichage pour éviter un effet de scintillement
             glfw.swap_buffers(self.window)
@@ -224,9 +232,9 @@ class Game(object):
             if key == glfw.KEY_ESCAPE:
                 glfw.set_window_should_close(win, True)
             elif key == glfw.KEY_W:
-                self.translation_velocity[2] = -1.0
+                self.translation_velocity[1] = 1.0
             elif key == glfw.KEY_S:
-                self.translation_velocity[2] = 1.0
+                self.translation_velocity[1] = -1.0
             elif key == glfw.KEY_A:
                 self.translation_velocity[0] = -1.0
             elif key == glfw.KEY_D:
@@ -239,16 +247,22 @@ class Game(object):
                 self.rotation_velocity[1] = 1.0
             elif key == glfw.KEY_RIGHT:
                 self.rotation_velocity[1] = -1.0
+            elif key == glfw.KEY_E:
+                self.translation_velocity[2] = 1.0
+            elif key == glfw.KEY_R:
+                self.translation_velocity[2] = -1.0
 
         elif action == glfw.RELEASE:
             if key in (glfw.KEY_W, glfw.KEY_S):
-                self.translation_velocity[2] = 0.0
+                self.translation_velocity[1] = 0.0
             elif key in (glfw.KEY_A, glfw.KEY_D):
                 self.translation_velocity[0] = 0.0
             elif key in (glfw.KEY_UP, glfw.KEY_DOWN):
                 self.rotation_velocity[0] = 0.0
             elif key in (glfw.KEY_LEFT, glfw.KEY_RIGHT):
                 self.rotation_velocity[1] = 0.0
+            if key in (glfw.KEY_E, glfw.KEY_R):
+                self.translation_velocity[2] = 0.0
 
     def compile_shader(self, shader_content, shader_type):
         # compilation d'un shader donne selon son type ´

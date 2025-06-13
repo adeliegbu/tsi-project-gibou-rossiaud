@@ -1,11 +1,17 @@
 #version 330 core
 
-// Variable d'entrée, ici la position
-layout (location = 0) in vec3 position;
+layout(location = 0) in vec3 in_pos;
+layout(location = 1) in vec3 in_norm;
+layout(location = 2) in vec3 in_color;
+layout(location = 3) in vec2 in_uv;
 
-//Un Vertex Shader minimaliste
-void main (void)
-{
-  //Coordonnees du sommet
-  gl_Position = vec4(position,1.0);
+uniform mat4 translation;
+uniform mat4 rotation;
+uniform mat4 projection;
+
+out vec3 frag_color;
+
+void main() {
+    gl_Position = projection * translation * rotation * vec4(in_pos, 1.0);
+    frag_color = in_color;
 }
