@@ -194,6 +194,87 @@ class Game(object):
                 self.rotation_matrix = pyrr.matrix44.multiply(r, self.rotation_matrix)
             
         glfw.terminate()
+
+
+
+
+
+    # def run(self):
+
+    #     start = time.time()
+    #     frames = 0
+    #     previous_time = time.time()
+    #     # boucle d'affichage
+    #     while not glfw.window_should_close(self.window):
+    #         # choix de la couleur de fond
+    #         GL.glClearColor(0.5, 0.6, 0.9, 1.0)
+    #         # nettoyage de la fenêtre : fond et profondeur
+    #         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+
+    #         # Envoi des matrices uniforms
+    #         loc_model = GL.glGetUniformLocation(self.program, "model")
+    #         if loc_model != -1:
+    #             GL.glUniformMatrix4fv(loc_model, 1, GL.GL_FALSE, self.model_matrix)
+
+    #         loc_projection = GL.glGetUniformLocation(self.program, "projection")
+    #         if loc_projection != -1:
+    #             GL.glUniformMatrix4fv(loc_projection, 1, GL.GL_FALSE, self.projection_matrix)
+
+    #         GL.glBindVertexArray(self.vao)
+    #         GL.glDrawElements(GL.GL_TRIANGLES, self.nb_indices, GL.GL_UNSIGNED_INT, None)
+            
+    #         # Dessiner la sphère avec sa propre matrice modèle fixe
+    #         sphere_model = pyrr.matrix44.create_from_translation([2.0, 0.0, -3.0], dtype=np.float32)
+    #         GL.glUniformMatrix4fv(loc_model, 1, GL.GL_FALSE, sphere_model)
+    #         GL.glBindVertexArray(self.sphere_vao)
+    #         GL.glDrawElements(GL.GL_TRIANGLES, self.sphere_nb_indices, GL.GL_UNSIGNED_INT, None)
+
+
+    #         # changement de buffer d'affichage pour éviter un effet de scintillement
+    #         glfw.swap_buffers(self.window)
+    #         # gestion des évènements
+    #         glfw.poll_events()
+
+    #         frames += 1
+    #         current_time = time.time()
+    #         dt = current_time - previous_time
+    #         previous_time = current_time
+
+    #         # Calculer la direction avant (Z négatif dans le repère objet)
+    #         forward = np.array([0, 0, -1, 0], dtype=np.float32)
+    #         # Appliquer la rotation actuelle pour obtenir la direction orientée
+    #         oriented_forward = pyrr.matrix44.apply_to_vector(self.model_matrix, forward)[:3]
+
+    #         # Calculer la direction droite (X positif dans le repère objet)
+    #         right = np.array([1, 0, 0, 0], dtype=np.float32)
+    #         oriented_right = pyrr.matrix44.apply_to_vector(self.model_matrix, right)[:3]
+
+    #         # Normaliser les vecteurs
+    #         oriented_forward = oriented_forward / np.linalg.norm(oriented_forward)
+    #         oriented_right = oriented_right / np.linalg.norm(oriented_right)
+
+    #         # Calcul du mouvement en fonction des inputs
+    #         movement = np.zeros(3, dtype=np.float32)
+    #         if self.translation_velocity[2] != 0:  # Avant/arrière
+    #             movement += oriented_forward * self.translation_velocity[2] * dt
+    #         if self.translation_velocity[0] != 0:  # Gauche/droite
+    #             movement += oriented_right * self.translation_velocity[0] * dt
+
+    #         # Appliquer le mouvement si nécessaire
+    #         if np.linalg.norm(movement) > 0:
+    #             translation = pyrr.matrix44.create_from_translation(movement, dtype=np.float32)
+    #             self.model_matrix = pyrr.matrix44.multiply(translation, self.model_matrix)
+                
+    #         # Gestion des rotations
+    #         if self.rotation_velocity[0] != 0:  # Rotation horizontale (Y)
+    #             # Créer la rotation autour du centre de l'objet
+    #             rot_y = pyrr.matrix44.create_from_y_rotation(self.rotation_velocity[0] * dt, dtype=np.float32)
+    #             self.model_matrix = pyrr.matrix44.multiply(self.model_matrix, rot_y)
+    #         if self.rotation_velocity[1] != 0:  # Rotation verticale (X)
+    #             rot_x = pyrr.matrix44.create_from_x_rotation(self.rotation_velocity[1] * dt, dtype=np.float32)
+    #             self.model_matrix = pyrr.matrix44.multiply(self.model_matrix, rot_x)
+    #     glfw.terminate()
+
                 
         
     def create_program_from_file(self, vs_file, fs_file):
