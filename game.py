@@ -24,7 +24,7 @@ class Game(object):
         self.window = self.init_window()
         self.init_context()
 
-        self.shader = ShaderProgram('shader.vert', 'shader.frag')
+        self.shader = ShaderProgram('shader/shader.vert', 'shader/shader.frag')
         self.shader.use()
 
         self.init_data()
@@ -37,7 +37,6 @@ class Game(object):
         #assure une bonne fluidité dans les mouvements
         
         self.translation_matrix = pyrr.matrix44.create_from_translation([0.0, 0.0, -3.0], dtype=np.float32)
-
    
 
     def init_window(self):
