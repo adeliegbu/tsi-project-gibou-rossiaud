@@ -67,6 +67,12 @@ class Game(object):
         self.vertices_cube = obj.vertices_cube
         self.indices = obj.indices
 
+        sphere_data = generate_sphere(radius=1.0, lat_segments=32, lon_segments=64)
+        self.sphere_vertices = sphere_data['interlaced']
+        self.sphere_indices = sphere_data['faces'].reshape(-1)
+        self.sphere_nb_indices = len(self.sphere_indices)
+
+
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
 
@@ -98,45 +104,35 @@ class Game(object):
 
         self.nb_indices = len(self.indices)
 
+        #VAO VBO VEO et maillage pour sphère
+        self.sphere_vao = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(self.sphere_vao)
 
+        self.sphere_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.sphere_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.sphere_vertices.nbytes, self.sphere_vertices, GL.GL_STATIC_DRAW)
 
-    def generate_sphere(self, radius=1.0, lat_segments=16, lon_segments=32):
-        vertices = []
-        indices = []
-        for i in range(lat_segments + 1):
-            theta = np.pi * i / lat_segments
-            sin_theta = np.sin(theta)
-            cos_theta = np.cos(theta)
-            for j in range(lon_segments + 1):
-                phi = 2 * np.pi * j / lon_segments
-                sin_phi = np.sin(phi)
-                cos_phi = np.cos(phi)
-                # Position (x, y, z)
-                x = radius * sin_theta * cos_phi
-                y = radius * cos_theta
-                z = radius * sin_theta * sin_phi
-                # Normale (normée car sphère unitaire)
-                nx = sin_theta * cos_phi
-                ny = cos_theta
-                nz = sin_theta * sin_phi
-                # Texture coordinates (u, v)
-                u = j / lon_segments
-                v = i / lat_segments
-                r, g, b = 1.0, 1.0, 1.0
-                # Interlaced vertex: position, normal, color, uv
-                vertex = [x, y, z, nx, ny, nz, r, g, b, u, v]
-                vertices.append(vertex)
-        # Faces
-        for i in range(lat_segments):
-            for j in range(lon_segments):
-                a = i * (lon_segments + 1) + j
-                b = a + lon_segments + 1
-                indices.append((a, b, a + 1))
-                indices.append((a + 1, b, b + 1))
-        return {
-        'interlaced': np.array(vertices, dtype=np.float32), # [pos, norm, color]
-        'faces': np.array(indices, dtype=np.int32) # (i0, i1, i2)
-        }
+        self.sphere_ebo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.sphere_ebo)
+        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.sphere_indices.nbytes, self.sphere_indices, GL.GL_STATIC_DRAW)
+
+        stride = 11 * 4  # float size
+
+        # position
+        GL.glEnableVertexAttribArray(0)
+        GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, False, stride, ctypes.c_void_p(0))
+
+        # normal
+        GL.glEnableVertexAttribArray(1)
+        GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, False, stride, ctypes.c_void_p(3 * 4))
+
+        # color
+        GL.glEnableVertexAttribArray(2)
+        GL.glVertexAttribPointer(2, 3, GL.GL_FLOAT, False, stride, ctypes.c_void_p(6 * 4))
+
+        # uv
+        GL.glEnableVertexAttribArray(3)
+        GL.glVertexAttribPointer(3, 2, GL.GL_FLOAT, False, stride, ctypes.c_void_p(9 * 4))
 
 
     def run(self):
@@ -166,6 +162,10 @@ class Game(object):
 
             GL.glBindVertexArray(self.vao)
             GL.glDrawElements(GL.GL_TRIANGLES, self.nb_indices, GL.GL_UNSIGNED_INT, None)
+
+            # Dessiner la sphère
+            GL.glBindVertexArray(self.sphere_vao)
+            GL.glDrawElements(GL.GL_TRIANGLES, self.sphere_nb_indices, GL.GL_UNSIGNED_INT, None)
 
 
             # changement de buffer d'affichage pour éviter un effet de scintillement
@@ -233,6 +233,43 @@ class Game(object):
             else print(f'{25*"-"}\nError reading file:\n{fs_file}\n{25*"-"}')
         return self.create_program(vs_content, fs_content)
 
+def generate_sphere(radius=1.0, lat_segments=16, lon_segments=32):
+    vertices = []
+    indices = []
+    for i in range(lat_segments + 1):
+        theta = np.pi * i / lat_segments
+        sin_theta = np.sin(theta)
+        cos_theta = np.cos(theta)
+        for j in range(lon_segments + 1):
+            phi = 2 * np.pi * j / lon_segments
+            sin_phi = np.sin(phi)
+            cos_phi = np.cos(phi)
+            # Position (x, y, z)
+            x = radius * sin_theta * cos_phi
+            y = radius * cos_theta
+            z = radius * sin_theta * sin_phi
+            # Normale (normée car sphère unitaire)
+            nx = sin_theta * cos_phi
+            ny = cos_theta
+            nz = sin_theta * sin_phi
+            # Texture coordinates (u, v)
+            u = j / lon_segments
+            v = i / lat_segments
+            r, g, b = 1.0, 1.0, 1.0
+            # Interlaced vertex: position, normal, color, uv
+            vertex = [x, y, z, nx, ny, nz, r, g, b, u, v]
+            vertices.append(vertex)
+    # Faces
+    for i in range(lat_segments):
+        for j in range(lon_segments):
+            a = i * (lon_segments + 1) + j
+            b = a + lon_segments + 1
+            indices.append((a, b, a + 1))
+            indices.append((a + 1, b, b + 1))
+    return {
+    'interlaced': np.array(vertices, dtype=np.float32), # [pos, norm, color]
+    'faces': np.array(indices, dtype=np.int32) # (i0, i1, i2)
+    }
 
 
 def main():
