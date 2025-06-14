@@ -15,6 +15,7 @@ from camera import Camera
 from object.sol import generate_sol
 from object.cube import generate_cube
 from object.sphere import generate_sphere
+from collision.collision import Collision
 import tools
 class Game(object):
     """ fenêtre GLFW avec openGL """
@@ -95,7 +96,7 @@ class Game(object):
 
         self.cube = Object_3d(
             vao=self.vao_cube,
-            position=np.array([5.0, 0.0, 5.0, 1.0], dtype=np.float32),
+            position=np.array([5.0, 2.0, 5.0, 1.0], dtype=np.float32),
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_cube,
@@ -106,7 +107,7 @@ class Game(object):
 
         self.sphere = Object_3d(
             vao=self.vao_sphere,
-            position=np.array([5.0, 0.5, 5.0, 1.0], dtype=np.float32),
+            position=np.array([10.0, 0.5, 5.0, 1.0], dtype=np.float32),
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_sphere,
@@ -114,6 +115,8 @@ class Game(object):
             taille=np.array([1.0, 1.0, 1.0], dtype=np.float32),
             window=self.window
         )
+
+        self.collision = Collision()
 
     def run(self):
 
@@ -152,7 +155,10 @@ class Game(object):
             loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
             GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, view)
 
-            self.cube.move_object(dt, speed=5.0)
+            self.collision.resolve_collision(self.cube, self.sol)
+            self.collision.resolve_collision(self.cube, self.sphere)
+
+            self.cube.move_object(dt, speed=5.0, rotation_speed=2.0)
 
             self.sol.show_object()
             self.cube.show_object()
