@@ -59,3 +59,7 @@ class Object_3d:
 
         self.velocity += self.gravity * dt
         self.position += self.velocity * dt
+
+    def jump(self, jump_speed):
+        if glfw.get_key(self.window, glfw.KEY_SPACE) == glfw.PRESS:
+            self.velocity[1] += jump_speed
