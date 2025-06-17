@@ -4,7 +4,7 @@ import pyrr
 import glfw
 
 class Object_3d:
-    def __init__(self, vao, position, angle, shader_program, texture, nb_sommets, taille, window, radius = None):
+    def __init__(self, vao, position, angle, shader_program, texture, nb_sommets, taille, window, radius = 0.0):
         self.vao = vao
         self.position = position
         self.angle = angle

@@ -112,7 +112,7 @@ class Game(object):
             shader_program=self.shader.get_id(),
             texture=self.texture_sphere,
             nb_sommets=len(self.sphere_indices)*3,
-            taille=np.array([1.0, 1.0, 1.0], dtype=np.float32),
+            taille=np.array([1.0, 2.0, 1.0], dtype=np.float32),
             window=self.window,
             radius=1.0
         )
@@ -156,11 +156,11 @@ class Game(object):
             loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
             GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, view)
 
-            if self.collision.find_collision(self.cube, self.sol) == 1:
+            if self.collision.find_collision_cc(self.cube, self.sol) == 1:
                 self.cube.jump(jump_speed=5.0)
 
-            self.collision.resolve_collision(self.cube, self.sol)
-            self.collision.resolve_collision(self.cube, self.sphere)
+            self.collision.resolve_collision_cc(self.cube, self.sol)
+            self.collision.resolve_collision_cs_cube_to_stop(self.cube, self.sphere)
 
             self.cube.move_object(dt, speed=5.0, rotation_speed=2.0)
             
