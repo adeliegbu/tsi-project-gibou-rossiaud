@@ -113,7 +113,8 @@ class Game(object):
             texture=self.texture_sphere,
             nb_sommets=len(self.sphere_indices)*3,
             taille=np.array([1.0, 1.0, 1.0], dtype=np.float32),
-            window=self.window
+            window=self.window,
+            radius=1.0
         )
 
         self.collision = Collision()

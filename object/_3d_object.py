@@ -4,7 +4,7 @@ import pyrr
 import glfw
 
 class Object_3d:
-    def __init__(self, vao, position, angle, shader_program, texture, nb_sommets, taille, window):
+    def __init__(self, vao, position, angle, shader_program, texture, nb_sommets, taille, window, radius = None):
         self.vao = vao
         self.position = position
         self.angle = angle
@@ -16,6 +16,7 @@ class Object_3d:
         self.velocity = np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32)  # Vitesse initiale
         self.window = window
         self.gravity = np.array([0.0, -9.81, 0.0, 0.0], dtype=np.float32)
+        self.radius = radius
 
     def show_object(self):
         

@@ -5,7 +5,7 @@ class Collision:
     def __init__(self):
         pass
 
-    def check_collision(self, obj1, obj2):
+    def check_collision_cc(self, obj1, obj2):   # Check collision beetween two cubes
         if (obj1.position[0] < obj2.position[0] + obj2.taille[0] and # axe X
             obj1.position[0] + obj1.taille[0] > obj2.position[0] and
             obj1.position[1] < obj2.position[1] + obj2.taille[1] and # axe Y
@@ -15,6 +15,13 @@ class Collision:
             return True
         return False
     
+    def check_collision_cs(self, obj1, obj2):   # Check collision beetween a cube and a sphere
+        distance = np.sqrt((obj2.position[0] - obj1.position[0])**2 + (obj2.position[1] - obj1.position[1])**2 + (obj2.position[2] - obj1.position[2])**2)
+        if distance <= obj1.radius + obj2.radius:
+            return True
+        return False
+
+    
     def find_collision(self, obj1, obj2):
         center1 = [obj1.position[i] + obj1.taille[i] / 2 for i in range(3)]
         center2 = [obj2.position[i] + obj2.taille[i] / 2 for i in range(3)]
@@ -22,7 +29,7 @@ class Collision:
         dx = (obj1.taille[0] + obj2.taille[0]) / 2 - abs(center1[0] - center2[0])
         dy = (obj1.taille[1] + obj2.taille[1]) / 2 - abs(center1[1] - center2[1])
         dz = (obj1.taille[2] + obj2.taille[2]) / 2 - abs(center1[2] - center2[2])
-        if self.check_collision(obj1, obj2):
+        if self.check_collision_cc(obj1, obj2):
             if dx < dy and dx < dz:
                 direction = 0 
             elif dy < dx and dy < dz:
