@@ -17,6 +17,7 @@ class Object_3d:
         self.window = window
         self.gravity = np.array([0.0, -9.81, 0.0, 0.0], dtype=np.float32)
         self.radius = radius
+        self.jump_allowed = False
 
     def show_object(self):
         
@@ -60,7 +61,3 @@ class Object_3d:
 
         self.velocity += self.gravity * dt
         self.position += self.velocity * dt
-
-    def jump(self, jump_speed):
-        if glfw.get_key(self.window, glfw.KEY_SPACE) == glfw.PRESS:
-            self.velocity[1] += jump_speed

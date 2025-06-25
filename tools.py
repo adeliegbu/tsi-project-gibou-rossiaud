@@ -2,6 +2,7 @@ import OpenGL.GL as GL
 from ctypes import c_float, c_void_p, sizeof
 import os
 from PIL import Image
+import numpy as np
 
 def load_to_gpu(sommets, index):
     vao = GL.glGenVertexArrays(1)
@@ -48,9 +49,9 @@ def load_texture(filename):
     im = Image.open(filename).transpose(Image.Transpose.FLIP_TOP_BOTTOM).convert('RGBA')
 
     texture_id = GL.glGenTextures(1)
-    # selection de la texture courante ´ a partir de son identifiant `
+    # selection de la texture courante à partir de son identifiant
     GL.glBindTexture(GL.GL_TEXTURE_2D, texture_id)
-    # parametrisation de la texture ´
+    # parametrisation de la texture
     GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT)
     GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT)
     GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)

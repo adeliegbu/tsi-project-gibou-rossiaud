@@ -63,7 +63,7 @@ class Game(object):
 
 
     def init_data(self):
-        self.vertices_sol, self.indices_sol, self.size_sol = generate_sol(100)
+        self.vertices_sol, self.indices_sol, self.size_sol = generate_sol(100.0)
 
         # Création des données pour le cube
         self.vertices_cube, self.indices_cube = generate_cube()
@@ -79,13 +79,13 @@ class Game(object):
         # Création du VAO pour la sphère
         self.vao_sphere = tools.load_to_gpu(self.sphere_vertices, self.sphere_indices)
 
-        self.texture_sol = tools.load_texture('texture/sphere_texture.png')
+        self.texture_sol = tools.load_texture('texture/grass.png')
         self.texture_cube = tools.load_texture('texture/cube_texture.png')
         self.texture_sphere = tools.load_texture('texture/sphere_texture.png')
 
         self.sol = Object_3d(
             vao=self.vao_sol,
-            position=np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32),
+            position=np.array([0.0, -0.05, 0.0, 1.0], dtype=np.float32),
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_sol,
@@ -96,7 +96,7 @@ class Game(object):
 
         self.cube = Object_3d(
             vao=self.vao_cube,
-            position=np.array([5.0, 2.0, 5.0, 1.0], dtype=np.float32),
+            position=np.array([5.0,80.0, 5.0, 1.0], dtype=np.float32),
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_cube,
@@ -104,6 +104,8 @@ class Game(object):
             taille=np.array([1.0, 1.0, 1.0], dtype=np.float32),
             window=self.window
         )
+
+        self.binds.send_cube(self.cube)
 
         self.sphere = Object_3d(
             vao=self.vao_sphere,
@@ -156,14 +158,13 @@ class Game(object):
             loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
             GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, view)
 
-            if self.collision.find_collision_cc(self.cube, self.sol) == 1:
-                self.cube.jump(jump_speed=5.0)
+            # if self.collision.find_collision_cc(self.cube, self.sol) == 1:
+            #     self.cube.jump(jump_speed=5.0)
 
             self.collision.resolve_collision_cc(self.cube, self.sol)
-            self.collision.resolve_collision_cs_cube_to_stop(self.cube, self.sphere)
+            # self.collision.resolve_collision_cs_cube_to_stop(self.cube, self.sphere)
 
             self.cube.move_object(dt, speed=5.0, rotation_speed=2.0)
-            
 
             self.sol.show_object()
             self.cube.show_object()
@@ -173,6 +174,10 @@ class Game(object):
             glfw.swap_buffers(self.window)
             # gestion des évènements
             glfw.poll_events()
+
+
+            print(self.cube.jump_allowed)
+            # print(self.cube.velocity[1], self.cube.position[1])
 
         glfw.terminate()
 
