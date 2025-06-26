@@ -6,29 +6,29 @@ class Collision:
         pass
 
     def check_collision_cc(self, cube1, cube2):   # Check collision beetween two cubes
-        if (cube1.position[0] - cube1.taille[0]/2 < cube2.position[0] + cube2.taille[0]/2 and # axe X
-            cube1.position[0] + cube1.taille[0]/2 > cube2.position[0] - cube2.taille[0]/2 and
-            cube1.position[1] - cube1.taille[1]/2 < cube2.position[1] + cube2.taille[1]/2 and # axe Y
-            cube1.position[1] + cube1.taille[1]/2 > cube2.position[1] - cube2.taille[1]/2 and
-            cube1.position[2] - cube1.taille[2]/2 < cube2.position[2] + cube2.taille[2]/2 and # axe Z
-            cube1.position[2] + cube1.taille[2]/2 > cube2.position[2] - cube2.taille[1]/2 ):
-            return True
-        return False
+        min1 = [cube1.position[i] - cube1.taille[i] / 2 for i in range(3)]
+        max1 = [cube1.position[i] + cube1.taille[i] / 2 for i in range(3)]
+        min2 = [cube2.position[i] - cube2.taille[i] / 2 for i in range(3)]
+        max2 = [cube2.position[i] + cube2.taille[i] / 2 for i in range(3)]
+
+        # Détection de collision AABB
+        return (min1[0] < max2[0] and max1[0] > min2[0] and
+                min1[1] < max2[1] and max1[1] > min2[1] and
+                min1[2] < max2[2] and max1[2] > min2[2])
   
 
+    # def check_collision_ss(self, sphere1, sphere2):   # Check collision beetween two spheres
+    #     distance = np.sqrt((sphere2.position[0] - sphere1.position[0])**2 + (sphere2.position[1] - sphere1.position[1])**2 + (sphere2.position[2] - sphere1.position[2])**2)
+    #     if distance <= sphere1.radius + sphere2.radius:
+    #         return True
+    #     return False
     
-    def check_collision_ss(self, sphere1, sphere2):   # Check collision beetween two spheres
-        distance = np.sqrt((sphere2.position[0] - sphere1.position[0])**2 + (sphere2.position[1] - sphere1.position[1])**2 + (sphere2.position[2] - sphere1.position[2])**2)
-        if distance <= sphere1.radius + sphere2.radius:
-            return True
-        return False
-    
-    def check_collision_cs(self, cube, sphere):   # Check collision beetween a cube and a sphere
-        center = [cube.position[i] + cube.taille[i] / 2 for i in range(3)]
-        distance = np.sqrt((sphere.position[0] - center[0])**2 + (sphere.position[1] - center[1])**2 + (sphere.position[2] - center[2])**2)
-        if distance <= cube.taille[0] / 2 + sphere.radius:
-            return True
-        return False
+    # def check_collision_cs(self, cube, sphere):   # Check collision beetween a cube and a sphere
+    #     center = [cube.position[i] + cube.taille[i] / 2 for i in range(3)]
+    #     distance = np.sqrt((sphere.position[0] - center[0])**2 + (sphere.position[1] - center[1])**2 + (sphere.position[2] - center[2])**2)
+    #     if distance <= cube.taille[0] / 2 + sphere.radius:
+    #         return True
+    #     return False
 
     
     # def find_collision_cc(self, obj1, obj2):
@@ -64,43 +64,53 @@ class Collision:
         return axe
 
     
-    def find_collision_ss(self, sphere1, sphere2):
-        if self.check_collision_ss(sphere1, sphere2):
-            delta = [sphere2.position[i] - sphere1.position[i] for i in range(3)]
-            abs_delta = [abs(d) for d in delta]
-            direction = abs_delta.index(max(abs_delta))
-            return direction  # 0 = X, 1 = Y, 2 = Z
+    # def find_collision_ss(self, sphere1, sphere2):
+    #     if self.check_collision_ss(sphere1, sphere2):
+    #         delta = [sphere2.position[i] - sphere1.position[i] for i in range(3)]
+    #         abs_delta = [abs(d) for d in delta]
+    #         direction = abs_delta.index(max(abs_delta))
+    #         return direction  # 0 = X, 1 = Y, 2 = Z
         
-    def find_collision_cs(self, cube, sphere):
-        if self.check_collision_cs(cube, sphere):
-            # Trouver le point le plus proche du centre de la sphère sur l’AABB (cube)
-            closest_point = [0, 0, 0]
-            for i in range(3):
-                min_face = cube.position[i]
-                max_face = cube.position[i] + cube.taille[i]
-                closest_point[i] = max(min_face, min(sphere.position[i], max_face))
+    # def find_collision_cs(self, cube, sphere):
+    #     if self.check_collision_cs(cube, sphere):
+    #         # Trouver le point le plus proche du centre de la sphère sur l’AABB (cube)
+    #         closest_point = [0, 0, 0]
+    #         for i in range(3):
+    #             min_face = cube.position[i]
+    #             max_face = cube.position[i] + cube.taille[i]
+    #             closest_point[i] = max(min_face, min(sphere.position[i], max_face))
 
-            # Calculer le vecteur de collision
-            delta = [sphere.position[i] - closest_point[i] for i in range(3)]
-            abs_delta = [abs(d) for d in delta]
+    #         # Calculer le vecteur de collision
+    #         delta = [sphere.position[i] - closest_point[i] for i in range(3)]
+    #         abs_delta = [abs(d) for d in delta]
 
-            # Détermine l’axe principal de la collision
-            direction = abs_delta.index(max(abs_delta))
-            return direction  # 0 = X, 1 = Y, 2 = Z
+    #         # Détermine l’axe principal de la collision
+    #         direction = abs_delta.index(max(abs_delta))
+    #         return direction  # 0 = X, 1 = Y, 2 = Z
         
 
     def resolve_collision_cc(self, cube1, cube2):        # Empêche le cube 1 de traverser le cube 2
         direction = self.find_collision_cc(cube1, cube2)
         if direction == 0:
             cube1.velocity[0] = 0
-            cube1.position[0] = cube2.position[0] + cube2.taille[0]/2
-        elif direction == 1 and glfw.get_key(cube1.window, glfw.KEY_SPACE) != glfw.PRESS:
+            if cube1.position[0] < cube2.position[0]:
+                cube1.position[0] = cube2.position[0] - (cube2.taille[0] + cube1.taille[0]) / 2
+            else:
+                cube1.position[0] = cube2.position[0] + (cube2.taille[0] + cube1.taille[0]) / 2
+
+        elif direction == 1:
             cube1.velocity[1] = 0
-            cube1.position[1] = cube2.position[1] + cube2.taille[1]/2
+            if cube1.position[1] < cube2.position[1]:
+                cube1.position[1] = cube2.position[1] - (cube2.taille[1] + cube1.taille[1]) / 2
+            else:
+                cube1.position[1] = cube2.position[1] + (cube2.taille[1] + cube1.taille[1]) / 2
+
         elif direction == 2:
             cube1.velocity[2] = 0
-            cube1.position[2] = cube2.position[2] + cube2.taille[2]/2
-        return direction
+            if cube1.position[2] < cube2.position[2]:
+                cube1.position[2] = cube2.position[2] - (cube2.taille[2] + cube1.taille[2]) / 2
+            else:
+                cube1.position[2] = cube2.position[2] + (cube2.taille[2] + cube1.taille[2]) / 2
 
     # def resolve_collision_ss(self, sphere1, sphere2):
     #     direction = self.find_collision_ss(sphere1, sphere2)

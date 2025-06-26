@@ -85,7 +85,7 @@ class Game(object):
 
         self.sol = Object_3d(
             vao=self.vao_sol,
-            position=np.array([0.0, -0.05, 0.0, 1.0], dtype=np.float32),
+            position=np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32),
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_sol,
@@ -96,7 +96,7 @@ class Game(object):
 
         self.cube = Object_3d(
             vao=self.vao_cube,
-            position=np.array([5.0,80.0, 5.0, 1.0], dtype=np.float32),
+            position=np.array([0.0, 3.0, 0.0, 1.0], dtype=np.float32),
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_cube,
@@ -158,11 +158,10 @@ class Game(object):
             loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
             GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, view)
 
-            # if self.collision.find_collision_cc(self.cube, self.sol) == 1:
-            #     self.cube.jump(jump_speed=5.0)
 
-            self.collision.resolve_collision_cc(self.cube, self.sol)
-            # self.collision.resolve_collision_cs_cube_to_stop(self.cube, self.sphere)
+            if self.collision.check_collision_cc(self.cube, self.sol):
+                self.cube.jump_allowed = True
+                self.collision.resolve_collision_cc(self.cube, self.sol)
 
             self.cube.move_object(dt, speed=5.0, rotation_speed=2.0)
 
@@ -176,7 +175,7 @@ class Game(object):
             glfw.poll_events()
 
 
-            print(self.cube.jump_allowed)
+            # print(self.cube.jump_allowed)
             # print(self.cube.velocity[1], self.cube.position[1])
 
         glfw.terminate()
@@ -189,4 +188,3 @@ class Game(object):
         fs_content = open(fs_file, 'r').read() if os.path.exists(fs_file)\
             else print(f'{25*"-"}\nError reading file:\n{fs_file}\n{25*"-"}')
         return self.create_program(vs_content, fs_content)
-

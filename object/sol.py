@@ -16,9 +16,9 @@ def generate_sol(size_sol):
 
 
     uv0 = (0, 0) # Coordonnées de texture pour le coin inférieur gauche
-    uv1 = (1, 0) # Coordonnées de texture pour le coin inférieur droit
-    uv2 = (1, 1) # Coordonnées de texture pour le coin supérieur droit
-    uv3 = (0, 1) # Coordonnées de texture pour le coin supérieur gauche
+    uv1 = (size_sol/2, 0) # Coordonnées de texture pour le coin inférieur droit
+    uv2 = (size_sol/2, size_sol/2) # Coordonnées de texture pour le coin supérieur droit
+    uv3 = (0, size_sol/2) # Coordonnées de texture pour le coin supérieur gauche
 
     sommets_sol = np.array([
                 *p0, *n0, *c, *uv0,
