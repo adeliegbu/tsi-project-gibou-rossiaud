@@ -7,6 +7,7 @@ class Object_3d:
     def __init__(self, vao, position, angle, shader_program, texture, nb_sommets, taille, window, radius = 0.0):
         self.vao = vao
         self.position = position
+        self.base_position = position.copy()  # Position de base pour le mouvement
         self.angle = angle
         self.shader_program = shader_program
         self.texture = texture
@@ -18,6 +19,8 @@ class Object_3d:
         self.gravity = np.array([0.0, -9.81, 0.0, 0.0], dtype=np.float32)
         self.radius = radius
         self.jump_allowed = False
+        self.move_allowed = True  # Permet de contrôler si l'objet peut se déplacer
+        self.picked = False
 
     def show_object(self):
         
@@ -50,14 +53,21 @@ class Object_3d:
         GL.glDrawElements(GL.GL_TRIANGLES, self.nb_sommets, GL.GL_UNSIGNED_INT, None)
     
     def move_object(self, dt, speed, rotation_speed):
-        if glfw.get_key(self.window, glfw.KEY_W) == glfw.PRESS or glfw.get_key(self.window, glfw.KEY_UP) == glfw.PRESS:
-            self.position += self.dir * speed * dt
-        if glfw.get_key(self.window, glfw.KEY_S) == glfw.PRESS or glfw.get_key(self.window, glfw.KEY_DOWN) == glfw.PRESS:
-            self.position -= self.dir * speed * dt
-        if glfw.get_key(self.window, glfw.KEY_A) == glfw.PRESS or glfw.get_key(self.window, glfw.KEY_LEFT) == glfw.PRESS:
-            self.angle[1] -= rotation_speed * dt
-        if glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS or glfw.get_key(self.window, glfw.KEY_RIGHT) == glfw.PRESS:
-            self.angle[1] += rotation_speed * dt
+        if self.move_allowed:
+            if glfw.get_key(self.window, glfw.KEY_W) == glfw.PRESS or glfw.get_key(self.window, glfw.KEY_UP) == glfw.PRESS:
+                self.position += self.dir * speed * dt
+            if glfw.get_key(self.window, glfw.KEY_S) == glfw.PRESS or glfw.get_key(self.window, glfw.KEY_DOWN) == glfw.PRESS:
+                self.position -= self.dir * speed * dt
+            if glfw.get_key(self.window, glfw.KEY_A) == glfw.PRESS or glfw.get_key(self.window, glfw.KEY_LEFT) == glfw.PRESS:
+                self.angle[1] -= rotation_speed * dt
+            if glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS or glfw.get_key(self.window, glfw.KEY_RIGHT) == glfw.PRESS:
+                self.angle[1] += rotation_speed * dt
 
         self.velocity += self.gravity * dt
         self.position += self.velocity * dt
+
+    def fruit_animation(self, dt):
+        # Rotate
+        self.angle[1] += np.pi/6 * dt
+        # Move up and down
+        self.position[1] += np.sin(4*self.angle[1]) * 0.001
