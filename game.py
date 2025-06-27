@@ -69,21 +69,32 @@ class Game(object):
         # Création des données pour le cube
         self.vertices_cube, self.indices_cube = generate_cube()
 
-        #création de murs
-        self.vertices_wall, self.indices_wall = generate_mur(taille=(1, 4.0, 5.0))
+        #création de murs selon axe z (verticaux)
+        self.vertices_wall_vertical, self.indices_wall_vertical = generate_mur(taille=(1, 7.0, 5.0))
         #création du vao pour le mur
-        self.vao_wall = tools.load_to_gpu(self.vertices_wall, self.indices_wall)
+        self.vao_wall_vertical = tools.load_to_gpu(self.vertices_wall_vertical, self.indices_wall_vertical)
 
-        walls_info = [
-        {"position": [2.0, 1.0, 1.0]},
-        {"position": [2.0, 1.0, 6.0]},
-        {"position": [-2.0, 1.0, 1.0]},
-        {"position": [-2.0, 1.0, 6.0]},
-        {"position": [2.0, 1.0, 1.0]},
-        {"position": [2.0, 1.0, 11.0]},
-        {"position": [-2.0, 1.0, 11.0]}
+        #création de murs selon axe x (horizontaux)
+        self.vertices_wall_horizontal, self.indices_wall_horizontal = generate_mur(taille=(5, 7.0, 1.0))
+        #création du vao pour le mur
+        self.vao_wall_horizontal = tools.load_to_gpu(self.vertices_wall_horizontal, self.indices_wall_horizontal)
 
+        walls_info_vertical = [
+        {"position": [2.0, 1.0, 1.0]},{"position": [-12.0, 1.0, 6.0]},{"position": [-2.0, 1.0, 1.0]},
+        {"position": [12.0, 1.0,1.0]},{"position": [-6.0, 1.0, 10.0]},{"position": [-2.0, 1.0, 10.0]},
+        {"position": [7.0, 1.0, -4.0]},{"position": [8.0, 1.0, 10.0]},{"position": [12.0, 1.0, 2.0]},
+        {"position": [7.0, 1.0, -3.0]},{"position": [-12.0, 1.0, 11.0]},{"position": [-17.0, 1.0, 10.0]},
+        {"position": [12.0, 1.0, 12.0]},{"position": [12.0, 1.0, 7.0]},
+        ]
 
+        walls_info_horizontal = [
+            {"position": [-4.0, 1.0, 4.0]},{"position": [-9.0, 1.0, 4.0]},{"position": [-9.0, 1.0, 8.0]},
+            {"position": [-4.0, 1.0, 13.0]},{"position": [4.0, 1.0, 4.0]},{"position": [9.0, 1.0, 4.0]},
+            {"position": [1.0, 1.0, 8.0]},{"position": [6.0, 1.0, 8.0]},{"position": [6.0, 1.0, 13.0]},
+            {"position": [1.0, 1.0, 13.0]},{"position": [-9.0, 1.0, 13.0]},{"position": [11.0, 1.0, 17.0]},
+            {"position": [6.0, 1.0, 17.0]},{"position": [1.0, 1.0, 17.0]},{"position": [-4.0, 1.0, 17.0]},
+            {"position": [-9.0, 1.0, 17.0]},{"position": [-14.0, 1.0, 17.0]},{"position": [-19.0, 1.0, 17.0]},
+            {"position": [-19.0, 1.0, 13.0]},{"position": [-14.0, 1.0, 8.0]},
         ]
 
         # Création des données pour la sphère
@@ -140,15 +151,28 @@ class Game(object):
         )
 
         self.walls = []
-        for wall_info in walls_info:
+        for wall_info in walls_info_vertical:
             wall = Object_3d(
-                vao=self.vao_wall,
+                vao=self.vao_wall_vertical,
                 position = np.array(wall_info["position"] + [1.0], dtype=np.float32),
                 angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
                 shader_program=self.shader.get_id(),
                 texture=self.texture_mur,
-                nb_sommets=len(self.indices_wall)*3,
-                taille=np.array([1,5,1], dtype=np.float32),
+                nb_sommets=len(self.indices_wall_vertical)*3,
+                taille=np.array([1,4,5], dtype=np.float32),
+                window=self.window
+                )
+            self.walls.append(wall)
+
+        for wall_info in walls_info_horizontal:
+            wall = Object_3d(
+                vao=self.vao_wall_horizontal,
+                position = np.array(wall_info["position"] + [1.0], dtype=np.float32),
+                angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+                shader_program=self.shader.get_id(),
+                texture=self.texture_mur,
+                nb_sommets=len(self.indices_wall_horizontal)*3,
+                taille=np.array([5,4,1], dtype=np.float32),
                 window=self.window
                 )
             self.walls.append(wall)
