@@ -85,38 +85,14 @@ class Game(object):
         #création du vao pour le mur
         self.vao_wall_horizontal = tools.load_to_gpu(self.vertices_wall_horizontal, self.indices_wall_horizontal)
 
-        walls_info_vertical = [
-        {"position": [2.0, 1.0, 1.0]},{"position": [-12.0, 1.0, 6.0]},{"position": [-2.0, 1.0, 1.0]},
-        {"position": [12.0, 1.0,1.0]},{"position": [-6.0, 1.0, 10.0]},{"position": [-2.0, 1.0, 10.0]},
-        {"position": [7.0, 1.0, -4.0]},{"position": [8.0, 1.0, 10.0]},{"position": [12.0, 1.0, 2.0]},
-        {"position": [7.0, 1.0, -3.0]},{"position": [-12.0, 1.0, 11.0]},{"position": [-17.0, 1.0, 10.0]},
-        {"position": [12.0, 1.0, 12.0]},{"position": [12.0, 1.0, 7.0]},
-        ]
+        walls_info_vertical = []
 
-        walls_info_horizontal = [
-            {"position": [-4.0, 1.0, 4.0]},{"position": [-9.0, 1.0, 4.0]},{"position": [-9.0, 1.0, 8.0]},
-            {"position": [-4.0, 1.0, 13.0]},{"position": [4.0, 1.0, 4.0]},{"position": [9.0, 1.0, 4.0]},
-            {"position": [1.0, 1.0, 8.0]},{"position": [6.0, 1.0, 8.0]},{"position": [6.0, 1.0, 13.0]},
-            {"position": [1.0, 1.0, 13.0]},{"position": [-9.0, 1.0, 13.0]},{"position": [11.0, 1.0, 17.0]},
-            {"position": [6.0, 1.0, 17.0]},{"position": [1.0, 1.0, 17.0]},{"position": [-4.0, 1.0, 17.0]},
-            {"position": [-9.0, 1.0, 17.0]},{"position": [-14.0, 1.0, 17.0]},{"position": [-19.0, 1.0, 17.0]},
-            {"position": [-19.0, 1.0, 13.0]},{"position": [-14.0, 1.0, 8.0]},
-        ]
+        walls_info_horizontal = []
 
         # Création des données pour la sphère
         sphere_data = generate_sphere(radius=1.0, lat_segments=32, lon_segments=64)
         self.sphere_vertices = sphere_data['interlaced']
         self.sphere_indices = sphere_data['faces'].reshape(-1)
-
-        #création de murs selon axe z (verticaux)
-        self.vertices_wall_vertical, self.indices_wall_vertical = generate_mur(taille=(1, 7.0, 5.0))
-        #création du vao pour le mur
-        self.vao_wall_vertical = tools.load_to_gpu(self.vertices_wall_vertical, self.indices_wall_vertical)
-
-        #création de murs selon axe x (horizontaux)
-        self.vertices_wall_horizontal, self.indices_wall_horizontal = generate_mur(taille=(5, 7.0, 1.0))
-        #création du vao pour le mur
-        self.vao_wall_horizontal = tools.load_to_gpu(self.vertices_wall_horizontal, self.indices_wall_horizontal)
 
         # Création des VAOs
         self.vao_sol = tools.load_to_gpu(self.vertices_sol, self.indices_sol)
@@ -190,6 +166,8 @@ class Game(object):
             texture=self.texture_cube,
             nb_sommets=len(self.indices_cube)*3,
             taille=np.array([1.0, 1.0, 1.0], dtype=np.float32),
+            window=self.window
+
         )
 
         self.binds.send_cube(self.cube)
@@ -313,6 +291,7 @@ class Game(object):
             self.started = True
             self.respawn_cube()
             self.random_place_fruits()
+            self.random_place_walls()  
             self.timer = glfw.get_time()
     
     def reset(self):
@@ -345,6 +324,38 @@ class Game(object):
             
             y = np.random.uniform(1.5, 2.5)  # Hauteur aléatoire pour les fruits
             fruit.position = np.array([x, y, z, 1.0], dtype=np.float32)
+
+    def random_place_walls(self):
+        """Place les murs à des positions aléatoires dans la scène"""
+        self.walls = []
+
+        num_walls = 70
+
+        for _ in range(num_walls):
+            if np.random.choice([True, False]):
+                vao = self.vao_wall_vertical
+                taille = np.array([1, 4, 5], dtype=np.float32)
+            else:
+                vao = self.vao_wall_horizontal
+                taille = np.array([5, 4, 1], dtype=np.float32)
+
+            x = np.random.uniform(-45, 45)
+            z = np.random.uniform(-45, 45)
+            y = 2.0  # Hauteur fixe pour les murs
+
+            wall = Object_3d(
+                vao=vao,
+                position=np.array([x, y, z, 1.0], dtype=np.float32),
+                angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+                shader_program=self.shader.get_id(),
+                texture=self.texture_mur,
+                nb_sommets=len(self.indices_wall_vertical)*3 if vao == self.vao_wall_vertical else len(self.indices_wall_horizontal)*3,
+                taille=taille,
+                window=self.window
+            )
+
+            self.walls.append(wall)
+
         
     def check_win(self):
         """ Vérifie si le joueur a ramassé tous les fruits et est revenu à la base """
@@ -420,6 +431,10 @@ class Game(object):
                 if self.collision.check_collision_cc(self.cube, sol):
                     self.cube.jump_allowed = True
                     self.collision.resolve_collision_cc(self.cube, sol)
+
+            for wall in self.walls:
+                if self.collision.check_collision_cc(self.cube, wall):
+                    self.collision.resolve_collision_cc(self.cube, wall)
 
             if self.cube.position[1] < -8.0:
                 self.respawn_cube()
