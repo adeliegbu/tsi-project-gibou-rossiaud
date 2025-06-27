@@ -70,8 +70,18 @@ class Game(object):
         self.vertices_cube, self.indices_cube = generate_cube()
 
         #création de murs
-        self.vertices_wall, self.indices_wall = generate_mur(taille=(1.0, 1.0, 1.0))
+        self.vertices_wall, self.indices_wall = generate_mur(taille=(0.5, 3.0, 10.0))
+        #création du vao pour le mur
+        self.vao_wall = tools.load_to_gpu(self.vertices_wall, self.indices_wall)
 
+        walls_info = [
+        {"position": [5.0, 1.0, 0.0], "taille": [1.0, 2.0, 0.5]},
+        {"position": [5.0, 1.0, 3.0], "taille": [1.0, 2.0, 0.5]},
+        {"position": [8.0, 1.0, 0.0], "taille": [1.0, 2.0, 0.5]},
+
+        ]
+
+        # Création des données pour la sphère
         sphere_data = generate_sphere(radius=1.0, lat_segments=32, lon_segments=64)
         self.sphere_vertices = sphere_data['interlaced']
         self.sphere_indices = sphere_data['faces'].reshape(-1)
@@ -86,6 +96,7 @@ class Game(object):
         self.texture_sol = tools.load_texture('texture/grass.png')
         self.texture_cube = tools.load_texture('texture/cube_texture.png')
         self.texture_sphere = tools.load_texture('texture/sphere_texture.png')
+        self.texture_mur = tools.load_texture('texture/wall_texture.png')
 
         self.sol = Object_3d(
             vao=self.vao_sol,
@@ -123,6 +134,19 @@ class Game(object):
             radius=1.0
         )
 
+        self.walls = []
+        for wall_info in walls_info:
+            wall = Object_3d(
+                vao=self.vao_wall,
+                position = np.array(wall_info["position"] + [1.0], dtype=np.float32),
+                angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+                shader_program=self.shader.get_id(),
+                texture=self.texture_mur,
+                nb_sommets=len(self.indices_wall)*3,
+                taille=np.array(wall_info["taille"], dtype=np.float32),
+                window=self.window
+                )
+            self.walls.append(wall)
         self.collision = Collision()
 
     def run(self):
@@ -167,11 +191,21 @@ class Game(object):
                 self.cube.jump_allowed = True
                 self.collision.resolve_collision_cc(self.cube, self.sol)
 
+
+            # Vérification des collisions entre le cube et le mur
+            for wall in self.walls :
+                if self.collision.check_collision_cc(self.cube, wall):
+                    self.collision.resolve_collision_cc(self.cube, wall)
+
             self.cube.move_object(dt, speed=5.0, rotation_speed=2.0)
 
             self.sol.show_object()
             self.cube.show_object()
             self.sphere.show_object()
+
+            for wall in self.walls:
+                wall.show_object()
+
 
             # changement de buffer d'affichage pour éviter un effet de scintillement
             glfw.swap_buffers(self.window)
