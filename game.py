@@ -5,6 +5,7 @@ import numpy as np
 import pyrr
 from PIL import Image
 import ctypes
+import os
 
 from object._3d_object import Object_3d 
 from binds.binds import Binds
