@@ -16,6 +16,8 @@ from object.sphere import generate_sphere
 from object.mur import generate_mur
 from collision.collision import Collision
 import tools
+from camera import Camera
+
 class Game(object):
     """ fenêtre GLFW avec openGL """
 
@@ -35,6 +37,11 @@ class Game(object):
 
         self.projection_matrix = pyrr.matrix44.create_perspective_projection(
             fovy=50.0, aspect=1.0, near=0.5, far=100.0, dtype=np.float32)
+        
+        self.camera = Camera(
+        position=np.array([0.0, 2.5, 6.0], dtype=np.float32),
+        target=np.array([0.0, 0.0, 0.0], dtype=np.float32)
+        )
         
         loc_projection = GL.glGetUniformLocation(self.shader.get_id(), "projection")
         if loc_projection != -1:
@@ -404,18 +411,18 @@ class Game(object):
 
             pos3 = np.array(self.cube.position[:3], dtype=np.float32)
             dir3 = np.array(self.cube.dir[:3], dtype=np.float32)
-            camera_pos = pos3 - dir3 * 6.0 + np.array([0.0, 2.5, 0.0], dtype=np.float32)
+            self.camera.update(pos3, dir3, self.walls, self.collision)
 
-            view = pyrr.matrix44.create_look_at(
+            """            view = pyrr.matrix44.create_look_at(
                 eye=camera_pos,
                 target=pos3,
                 up=np.array([0.0, 1.0, 0.0], dtype=np.float32),
                 dtype=np.float32
-            )
+            )"""
 
             GL.glUseProgram(self.shader.get_id())
             loc_view = GL.glGetUniformLocation(self.shader.get_id(), "view")
-            GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, view)
+            GL.glUniformMatrix4fv(loc_view, 1, GL.GL_FALSE, self.camera.view_matrix)
 
             if glfw.get_time() - self.move_timer > 0.5:
                 self.cube.move_allowed = True
