@@ -14,7 +14,7 @@ class Binds:
                 glfw.set_window_should_close(win, True)
         if action == glfw.PRESS:
             if key == glfw.KEY_SPACE and self.cube.jump_allowed:
-                self.cube.position[1] += 0.01
+                self.cube.position[1] += 5.0
                 self.cube.velocity[1] += 5.0
                 self.cube.jump_allowed = False
 

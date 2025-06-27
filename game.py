@@ -117,7 +117,7 @@ class Game(object):
         self.sol = Object_3d(
             vao=self.vao_sol,
             position=np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32),
-            angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+            angle=np.array([0.0, -005.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_sol,
             nb_sommets=len(self.indices_sol)*3,
@@ -127,13 +127,9 @@ class Game(object):
 
         self.cube = Object_3d(
             vao=self.vao_cube,
-            position=np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32),
+            position=np.array([5.0,80.0, 5.0, 1.0], dtype=np.float32),
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
-            shader_program=self.shader.get_id(),
-            texture=self.texture_cube,
-            nb_sommets=len(self.indices_cube)*3,
             taille=np.array([1.0, 1.0, 1.0], dtype=np.float32),
-            window=self.window
         )
 
         self.binds.send_cube(self.cube)
@@ -243,6 +239,7 @@ class Game(object):
 
 
             # print(self.cube.jump_allowed)
+            print(self.cube.jump_allowed)
             # print(self.cube.velocity[1], self.cube.position[1])
 
         glfw.terminate()
