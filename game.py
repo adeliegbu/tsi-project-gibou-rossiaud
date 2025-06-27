@@ -15,6 +15,7 @@ from camera import Camera
 from object.sol import generate_sol
 from object.cube import generate_cube
 from object.sphere import generate_sphere
+from object.mur import generate_mur
 from collision.collision import Collision
 import tools
 class Game(object):
@@ -67,6 +68,9 @@ class Game(object):
 
         # Création des données pour le cube
         self.vertices_cube, self.indices_cube = generate_cube()
+
+        #création de murs
+        self.vertices_wall, self.indices_wall = generate_mur(taille=(1.0, 1.0, 1.0))
 
         sphere_data = generate_sphere(radius=1.0, lat_segments=32, lon_segments=64)
         self.sphere_vertices = sphere_data['interlaced']
