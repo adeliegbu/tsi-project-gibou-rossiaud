@@ -70,14 +70,19 @@ class Game(object):
         self.vertices_cube, self.indices_cube = generate_cube()
 
         #création de murs
-        self.vertices_wall, self.indices_wall = generate_mur(taille=(0.5, 3.0, 10.0))
+        self.vertices_wall, self.indices_wall = generate_mur(taille=(1, 4.0, 5.0))
         #création du vao pour le mur
         self.vao_wall = tools.load_to_gpu(self.vertices_wall, self.indices_wall)
 
         walls_info = [
-        {"position": [5.0, 1.0, 0.0], "taille": [1.0, 2.0, 0.5]},
-        {"position": [5.0, 1.0, 3.0], "taille": [1.0, 2.0, 0.5]},
-        {"position": [8.0, 1.0, 0.0], "taille": [1.0, 2.0, 0.5]},
+        {"position": [2.0, 1.0, 1.0]},
+        {"position": [2.0, 1.0, 6.0]},
+        {"position": [-2.0, 1.0, 1.0]},
+        {"position": [-2.0, 1.0, 6.0]},
+        {"position": [2.0, 1.0, 1.0]},
+        {"position": [2.0, 1.0, 11.0]},
+        {"position": [-2.0, 1.0, 11.0]}
+
 
         ]
 
@@ -111,7 +116,7 @@ class Game(object):
 
         self.cube = Object_3d(
             vao=self.vao_cube,
-            position=np.array([0.0, 3.0, 0.0, 1.0], dtype=np.float32),
+            position=np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32),
             angle=np.array([0.0, 0.0, 0.0], dtype=np.float32),
             shader_program=self.shader.get_id(),
             texture=self.texture_cube,
@@ -143,7 +148,7 @@ class Game(object):
                 shader_program=self.shader.get_id(),
                 texture=self.texture_mur,
                 nb_sommets=len(self.indices_wall)*3,
-                taille=np.array(wall_info["taille"], dtype=np.float32),
+                taille=np.array([1,5,1], dtype=np.float32),
                 window=self.window
                 )
             self.walls.append(wall)
