@@ -107,6 +107,16 @@ class Game(object):
         self.sphere_vertices = sphere_data['interlaced']
         self.sphere_indices = sphere_data['faces'].reshape(-1)
 
+        #création de murs selon axe z (verticaux)
+        self.vertices_wall_vertical, self.indices_wall_vertical = generate_mur(taille=(1, 7.0, 5.0))
+        #création du vao pour le mur
+        self.vao_wall_vertical = tools.load_to_gpu(self.vertices_wall_vertical, self.indices_wall_vertical)
+
+        #création de murs selon axe x (horizontaux)
+        self.vertices_wall_horizontal, self.indices_wall_horizontal = generate_mur(taille=(5, 7.0, 1.0))
+        #création du vao pour le mur
+        self.vao_wall_horizontal = tools.load_to_gpu(self.vertices_wall_horizontal, self.indices_wall_horizontal)
+
         # Création des VAOs
         self.vao_sol = tools.load_to_gpu(self.vertices_sol, self.indices_sol)
         self.vao_platform = tools.load_to_gpu(self.vertices_platform, self.indices_platform)
@@ -124,6 +134,8 @@ class Game(object):
         self.texture_strawberry = tools.load_texture('texture/strawberry.jpg')
         self.texture_lemon = tools.load_texture('texture/lemon.jpg')
         self.texture_platform = tools.load_texture('texture/brick.jpg')
+        self.texture_mur = tools.load_texture('texture/wall_texture.png')
+
 
         self.sol1 = Object_3d(
             vao=self.vao_sol,
