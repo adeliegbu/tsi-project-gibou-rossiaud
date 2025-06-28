@@ -97,7 +97,7 @@ class Game(object):
         walls_info_horizontal = []
 
         # Création des données pour la sphère
-        sphere_data = generate_sphere(radius=1.0, lat_segments=32, lon_segments=64)
+        sphere_data = generate_sphere(radius=0.65, lat_segments=32, lon_segments=64)
         self.sphere_vertices = sphere_data['interlaced']
         self.sphere_indices = sphere_data['faces'].reshape(-1)
 
@@ -309,6 +309,8 @@ class Game(object):
             for fruit in self.fruits:
                 fruit.picked = False
                 fruit.position = fruit.base_position.copy()
+            for wall in self.walls:
+                wall.position[1] = 100.0
         
     def random_place_fruits(self):
         """ Place les fruits à des positions aléatoires dans la scène """
@@ -332,6 +334,17 @@ class Game(object):
             y = np.random.uniform(1.5, 2.5)  # Hauteur aléatoire pour les fruits
             fruit.position = np.array([x, y, z, 1.0], dtype=np.float32)
 
+    def is_position_valid(self, x, z, fruits, exclusion_radius):
+        if -5<= x <= 5 and -5 <= z <= 5:
+            return False
+        for fruit in fruits:
+            fruit_x, fruit_z = fruit.position[0], fruit.position[2]
+            dist = np.sqrt((x - fruit_x)**2 + (z - fruit_z)**2)
+            if dist < exclusion_radius:
+                return False
+        return True
+
+
     def random_place_walls(self):
         """Place les murs à des positions aléatoires dans la scène"""
         self.walls = []
@@ -341,14 +354,16 @@ class Game(object):
         for _ in range(num_walls):
             if np.random.choice([True, False]):
                 vao = self.vao_wall_vertical
-                taille = np.array([1, 4, 5], dtype=np.float32)
+                taille = np.array([1, 7, 5], dtype=np.float32)
             else:
                 vao = self.vao_wall_horizontal
-                taille = np.array([5, 4, 1], dtype=np.float32)
-
-            x = np.random.uniform(-45, 45)
-            z = np.random.uniform(-45, 45)
-            y = 2.0  # Hauteur fixe pour les murs
+                taille = np.array([5, 7, 1], dtype=np.float32)
+            while True:
+                x = np.random.uniform(-45, 45)
+                z = np.random.uniform(-45, 45)
+                if self.is_position_valid(x, z, self.fruits, exclusion_radius=1.0):
+                    break            
+            y = 3.5  # Hauteur fixe pour les murs
 
             wall = Object_3d(
                 vao=vao,
